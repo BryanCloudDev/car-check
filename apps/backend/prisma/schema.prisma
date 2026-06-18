@@ -4,6 +4,15 @@ generator client {
   moduleFormat    = "cjs"
 }
 
+generator sharedTypes {
+  provider    = "prisma-generator-typescript-interfaces"
+  output      = "../../../packages/shared/src/generated.ts"
+  enumType    = "stringUnion"
+  dateType    = "string"
+  decimalType = "string"
+  relations   = "none"
+}
+
 datasource db {
   provider = "postgresql"
 }
