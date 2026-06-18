@@ -8,18 +8,167 @@ datasource db {
   provider = "postgresql"
 }
 
-model User {
-  id    Int     @default(autoincrement()) @id
-  email String  @unique
-  name  String?
-  posts Post[]
+// ---------------------------------------------------------------------------
+// Tenant: el taller y sus usuarios
+// ---------------------------------------------------------------------------
+
+model Workshop {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users      User[]
+  customers  Customer[]
+  workOrders WorkOrder[]
 }
 
-model Post {
-  id        Int      @default(autoincrement()) @id
-  title     String
-  content   String?
-  published Boolean? @default(false)
-  author    User?    @relation(fields: [authorId], references: [id])
-  authorId  Int?
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         UserRole @default(ADMIN)
+
+  workshopId String
+  workshop   Workshop @relation(fields: [workshopId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([workshopId])
+}
+
+enum UserRole {
+  ADMIN
+  MECANICO // habilita RF-12 (roles) sin migración futura
+}
+
+// ---------------------------------------------------------------------------
+// Cliente (privado del taller)
+// ---------------------------------------------------------------------------
+
+model Customer {
+  id    String  @id @default(cuid())
+  name  String
+  phone String
+  email String?
+
+  workshopId String
+  workshop   Workshop @relation(fields: [workshopId], references: [id], onDelete: Cascade)
+
+  workOrders WorkOrder[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([workshopId])
+}
+
+// ---------------------------------------------------------------------------
+// Vehículo: ENTIDAD GLOBAL. Sin workshopId. El VIN es la clave del historial.
+// ---------------------------------------------------------------------------
+
+model Vehicle {
+  id      String  @id @default(cuid())
+  vin     String  @unique // identificador central, normalizado a mayúsculas
+  plate   String?
+  make    String?
+  model   String?
+  year    Int?
+  mileage Int? // último kilometraje conocido
+
+  workOrders WorkOrder[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([plate])
+}
+
+// ---------------------------------------------------------------------------
+// Orden de trabajo (privada del taller; referencia al vehículo global)
+// ---------------------------------------------------------------------------
+
+model WorkOrder {
+  id          String      @id @default(cuid())
+  status      OrderStatus @default(RECIBIDO)
+  mileage     Int? // kilometraje al momento del servicio
+  cost        Decimal     @default(0) @db.Decimal(10, 2) // total derivado de los items
+  notes       String?
+  serviceDate DateTime    @default(now())
+
+  workshopId String
+  workshop   Workshop @relation(fields: [workshopId], references: [id])
+
+  vehicleId String
+  vehicle   Vehicle @relation(fields: [vehicleId], references: [id])
+
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+
+  items OrderItem[]
+  media MediaAsset[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([workshopId])
+  @@index([vehicleId])
+  @@index([customerId])
+}
+
+enum OrderStatus {
+  RECIBIDO
+  EN_PROCESO
+  LISTO
+  ENTREGADO
+}
+
+// ---------------------------------------------------------------------------
+// Ítems de la orden: servicios y repuestos
+// ---------------------------------------------------------------------------
+
+model OrderItem {
+  id          String        @id @default(cuid())
+  type        OrderItemType
+  description String
+  quantity    Int           @default(1)
+  unitPrice   Decimal       @default(0) @db.Decimal(10, 2)
+
+  workOrderId String
+  workOrder   WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+
+  @@index([workOrderId])
+}
+
+enum OrderItemType {
+  SERVICIO
+  REPUESTO
+}
+
+// ---------------------------------------------------------------------------
+// Media (opcional): solo se guarda la clave de S3, nunca el archivo
+// ---------------------------------------------------------------------------
+
+model MediaAsset {
+  id          String    @id @default(cuid())
+  key         String // S3 object key
+  type        MediaType
+  contentType String?
+  sizeBytes   Int?
+
+  workOrderId String
+  workOrder   WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([workOrderId])
+}
+
+enum MediaType {
+  IMAGEN
+  VIDEO
 }
