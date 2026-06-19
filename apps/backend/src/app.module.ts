@@ -4,6 +4,7 @@ import { envConfiguration } from './common/config/env.config';
 import { JoiValidationSchema } from './common/config/joi.validation';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
+import { WorkshopScopeModule } from './common/workshop-scope/workshop-scope.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { AuthModule } from './auth/auth.module';
       validationSchema: JoiValidationSchema,
     }),
     PrismaModule,
+    WorkshopScopeModule,
     AuthModule,
   ],
   controllers: [],
