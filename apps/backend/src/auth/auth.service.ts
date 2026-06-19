@@ -1,11 +1,13 @@
 import {
   ConflictException,
   Injectable,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
+import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 
 @Injectable()
@@ -50,6 +52,30 @@ export class AuthService {
         },
       });
     });
+
+    const accessToken = this.jwt.sign({
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+      workshopId: user.workshopId,
+    });
+
+    return { accessToken };
+  }
+
+  async login(dto: LoginDto): Promise<{ accessToken: string }> {
+    const user = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('Credenciales inválidas');
+    }
+
+    const passwordMatch = await bcrypt.compare(dto.password, user.passwordHash);
+    if (!passwordMatch) {
+      throw new UnauthorizedException('Credenciales inválidas');
+    }
 
     const accessToken = this.jwt.sign({
       sub: user.id,
