@@ -1,159 +1,344 @@
-# Turborepo starter
+# Car Check
 
-This Turborepo starter is maintained by the Turborepo core team.
+Plataforma de gestión para talleres mecánicos. Monorepo con backend NestJS, frontend Next.js y tipos compartidos.
 
-## Using this example
-
-Run the following command:
-
-```sh
-npx create-turbo@latest
+```
+apps/
+  backend/   NestJS 11 + Prisma 7 + PostgreSQL  →  :3001
+  web/       Next.js 16 + React 19 + Tailwind 4  →  :3000
+packages/
+  shared/    Tipos TypeScript generados desde schema.prisma
+  ui/        Componentes React compartidos
+infra/
+  s3/        Terraform — bucket S3 + IAM para media uploads
 ```
 
-## What's inside?
+---
 
-This Turborepo includes the following packages/apps:
+## Requisitos
 
-### Apps and Packages
+| Herramienta | Versión mínima | Instalación |
+|---|---|---|
+| Node.js | 20 | https://nodejs.org |
+| pnpm | 9 | `npm i -g pnpm@9` |
+| Docker + Docker Compose | cualquiera reciente | https://docs.docker.com/get-docker |
+| Terraform | 1.6+ | https://developer.hashicorp.com/terraform/install _(solo para infra S3)_ |
+| AWS CLI | 2 | https://aws.amazon.com/cli _(solo para infra S3)_ |
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+---
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+## Setup local (primera vez)
 
-### Utilities
+### 1. Instalar dependencias
 
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo build
+```bash
+pnpm install
 ```
 
-Without global `turbo`, use your package manager:
+Instala todas las dependencias del monorepo y ejecuta `prisma generate` automáticamente vía el `postinstall` del backend.
 
-```sh
-cd my-turborepo
-npx turbo build
-pnpm dlx turbo build
-pnpm exec turbo build
+### 2. Configurar variables de entorno
+
+```bash
+# Backend
+cp apps/backend/.env.example apps/backend/.env
+
+# Frontend
+cp apps/web/.env.example apps/web/.env.local
 ```
 
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+`apps/backend/.env` necesita al menos un `JWT_SECRET` seguro antes de correr:
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo build --filter=docs
+```bash
+openssl rand -base64 64
+# Pegar el resultado en JWT_SECRET=
 ```
 
-Without global `turbo`:
+Las variables de AWS (`AWS_REGION`, `S3_BUCKET`, etc.) son opcionales en desarrollo local hasta que se implemente la funcionalidad de uploads (CAR-23).
 
-```sh
-npx turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
+### 3. Levantar la base de datos
+
+```bash
+docker compose -f apps/backend/docker-compose.yml up -d
 ```
 
-### Develop
+Levanta PostgreSQL 16 en el puerto `5432`. Los datos se persisten en un volumen Docker.
 
-To develop all apps and packages, run the following command:
+### 4. Aplicar migraciones
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo dev
+```bash
+pnpm --filter backend prisma:migrate
 ```
 
-Without global `turbo`, use your package manager:
+Crea y aplica todas las migraciones pendientes sobre la base de datos local.
 
-```sh
-cd my-turborepo
-npx turbo dev
-pnpm exec turbo dev
-pnpm exec turbo dev
+### 5. Iniciar el servidor de desarrollo
+
+```bash
+pnpm dev
 ```
 
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+Levanta backend (`:3001`) y frontend (`:3000`) en paralelo con hot-reload. Turbo gestiona el orden de arranque automáticamente.
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+---
 
-```sh
-turbo dev --filter=web
+## Comandos del día a día
+
+Todos se ejecutan desde la **raíz** del monorepo.
+
+| Comando | Qué hace |
+|---|---|
+| `pnpm dev` | Levanta backend + frontend con watch mode |
+| `pnpm build` | Compila todos los paquetes en orden correcto |
+| `pnpm lint` | Corre ESLint en todos los paquetes |
+| `pnpm check-types` | Verifica tipos TypeScript en todos los paquetes |
+| `pnpm format` | Formatea `.ts/.tsx/.md` con Prettier |
+
+Para correr un comando solo en un paquete:
+
+```bash
+pnpm --filter backend <script>
+pnpm --filter web <script>
 ```
 
-Without global `turbo`:
+---
 
-```sh
-npx turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
+## Base de datos (Prisma)
+
+Todos estos comandos se ejecutan con el prefijo `pnpm --filter backend` desde la raíz.
+
+| Comando | Qué hace | Cuándo usarlo |
+|---|---|---|
+| `prisma:generate` | Regenera Prisma Client y tipos en `packages/shared` | Después de cambiar `schema.prisma` |
+| `prisma:migrate` | Crea y aplica una migración nueva (interactivo) | Al agregar/modificar modelos en desarrollo |
+| `prisma:migrate:create` | Crea el SQL de migración sin aplicarla | Para revisar el SQL antes de aplicar |
+| `prisma:migrate:status` | Muestra qué migraciones están aplicadas | Para diagnosticar el estado de la DB |
+| `prisma:deploy` | Aplica migraciones pendientes sin interacción | **Deploy a producción** |
+| `prisma:reset` | Borra y recrea la DB desde cero | Reset completo en desarrollo |
+| `prisma:push` | Sincroniza el schema sin crear migración | Prototipado rápido (nunca en prod) |
+| `prisma:studio` | Abre UI visual para explorar datos | Debugging e inspección manual |
+
+### Flujo al modificar el schema
+
+```bash
+# 1. Editar apps/backend/prisma/schema.prisma
+# 2. Crear y aplicar la migración (también regenera los tipos de packages/shared)
+pnpm --filter backend prisma:migrate
 ```
 
-### Remote Caching
+---
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+## Infraestructura S3
 
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
+El bucket S3 para uploads de media (fotos, documentos) se provisiona con Terraform en `infra/s3/`.
 
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
+Esta sección solo es necesaria para quien va a crear o modificar la infraestructura. Si el bucket ya existe, solo necesitás que alguien te pase los valores de las 4 variables de entorno AWS.
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
+### 1. Instalar Terraform
 
-```sh
-cd my-turborepo
-turbo login
+**macOS:**
+```bash
+brew tap hashicorp/tap
+brew install hashicorp/tap/terraform
 ```
 
-Without global `turbo`, use your package manager:
-
-```sh
-cd my-turborepo
-npx turbo login
-pnpm exec turbo login
-pnpm exec turbo login
+**Linux (Debian/Ubuntu):**
+```bash
+wget -O - https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+sudo apt update && sudo apt install terraform
 ```
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+**Windows:** descargar el instalador desde https://developer.hashicorp.com/terraform/install
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo link
+Verificar instalación:
+```bash
+terraform -version   # debe mostrar >= 1.6
 ```
 
-Without global `turbo`:
+### 2. Instalar y configurar AWS CLI
 
-```sh
-npx turbo link
-pnpm exec turbo link
-pnpm exec turbo link
+**macOS:**
+```bash
+brew install awscli
 ```
 
-## Useful Links
+**Linux:**
+```bash
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+unzip awscliv2.zip && sudo ./aws/install
+```
 
-Learn more about the power of Turborepo:
+**Windows:** descargar el instalador desde https://aws.amazon.com/cli
 
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
+Verificar instalación:
+```bash
+aws --version   # debe mostrar >= 2
+```
+
+### 3. Obtener credenciales AWS con los permisos necesarios
+
+Terraform necesita un usuario IAM (o role) con permisos para crear recursos S3 e IAM. Si no tenés acceso a la consola AWS para crear ese usuario, pedíselo a quien administre la cuenta.
+
+Los permisos mínimos que necesita ese usuario administrador son:
+- `s3:CreateBucket`, `s3:PutBucketPolicy`, `s3:PutBucketCORS`, `s3:PutEncryptionConfiguration`, `s3:PutPublicAccessBlock`
+- `iam:CreateUser`, `iam:CreateAccessKey`, `iam:PutUserPolicy`
+
+Una vez que tengas el `Access Key ID` y `Secret Access Key` de ese usuario administrador:
+
+```bash
+aws configure
+# AWS Access Key ID: <tu access key>
+# AWS Secret Access Key: <tu secret key>
+# Default region name: us-east-1  (o la región que uses)
+# Default output format: json
+```
+
+Esto guarda las credenciales en `~/.aws/credentials`. Verificar que funciona:
+
+```bash
+aws sts get-caller-identity   # debe mostrar tu ARN sin error
+```
+
+### 4. Provisionar el bucket (primera vez)
+
+```bash
+cd infra/s3
+cp terraform.tfvars.example terraform.tfvars
+```
+
+Editar `terraform.tfvars` y ajustar al menos:
+- `env`: cambiar a `"production"` si es el entorno de prod
+- `allowed_origins`: agregar el dominio real de Vercel junto a `localhost:3000`
+
+```bash
+terraform init          # descarga los providers de AWS (solo la primera vez)
+terraform plan          # muestra qué recursos va a crear, sin aplicar nada
+terraform apply         # crea el bucket, CORS, usuario IAM y access key
+```
+
+Terraform pedirá confirmación antes de aplicar. Escribir `yes`.
+
+### 5. Obtener las credenciales generadas
+
+Una vez aplicado, obtener los valores para las variables de entorno:
+
+```bash
+terraform output bucket_name
+terraform output aws_region
+terraform output iam_access_key_id
+terraform output -raw iam_secret_access_key   # -raw porque es sensitivo
+```
+
+Copiar esos 4 valores a `apps/backend/.env` (local) o a las variables de entorno de Railway (producción). Ver sección [Backend — Railway](#backend--railway).
+
+### Actualizar configuración existente
+
+```bash
+cd infra/s3
+terraform plan    # ver qué cambiaría
+terraform apply
+```
+
+> `terraform.tfvars` y el state (`.tfstate`) están en `.gitignore`. Nunca commitear credenciales ni el archivo de state.
+
+---
+
+## Deploy
+
+### CI — automático (GitHub Actions)
+
+En cada push a `main` o `dev` y en cada PR a `main` se corre automáticamente:
+
+1. `pnpm lint`
+2. `pnpm check-types`
+3. `pnpm build`
+
+Configuración en `.github/workflows/ci.yml`.
+
+---
+
+### Backend — Railway
+
+El backend se despliega automáticamente al hacer merge a `main` usando `apps/backend/Dockerfile`.
+
+**Variables que Railway inyecta automáticamente:**
+- `DATABASE_URL` — base de datos PostgreSQL de Railway
+- `PORT`
+
+**Variables que hay que agregar manualmente en el dashboard de Railway:**
+
+| Variable | Valor |
+|---|---|
+| `NODE_ENV` | `production` |
+| `JWT_SECRET` | `openssl rand -base64 64` |
+| `JWT_EXPIRATION` | `86400s` |
+| `AWS_REGION` | región del bucket S3 |
+| `S3_BUCKET` | `terraform output bucket_name` |
+| `AWS_ACCESS_KEY_ID` | `terraform output iam_access_key_id` |
+| `AWS_SECRET_ACCESS_KEY` | `terraform output -raw iam_secret_access_key` |
+
+**Migraciones en producción** — correr una sola vez después de cada deploy que cambie el schema:
+
+```bash
+railway run pnpm --filter backend prisma:deploy
+```
+
+---
+
+### Frontend — Vercel
+
+El frontend se despliega automáticamente al hacer merge a `main`.
+
+**Configuración en Vercel:**
+- Root Directory: `apps/web`
+- Framework Preset: Next.js (autodetectado)
+
+**Variable de entorno en Vercel:**
+
+| Variable | Valor |
+|---|---|
+| `API_URL` | URL pública del backend en Railway (ej: `https://car-check-backend.up.railway.app`) |
+
+---
+
+## Referencia completa de scripts
+
+### Raíz
+
+| Script | Descripción |
+|---|---|
+| `pnpm dev` | Desarrollo con watch en todos los paquetes |
+| `pnpm build` | Build de producción completo |
+| `pnpm lint` | ESLint en todos los paquetes |
+| `pnpm check-types` | Type check TypeScript en todos los paquetes |
+| `pnpm format` | Formatear código con Prettier |
+
+### Backend (`apps/backend`)
+
+| Script | Descripción |
+|---|---|
+| `start:dev` | Servidor con hot-reload (vía `pnpm dev` desde raíz) |
+| `start:prod` | Servidor desde build compilado |
+| `build` | Compilar TypeScript a `dist/` |
+| `test` | Tests unitarios con Jest |
+| `test:watch` | Tests en modo watch |
+| `test:cov` | Tests con reporte de cobertura |
+| `test:e2e` | Tests end-to-end |
+| `prisma:generate` | Regenerar Prisma Client + tipos shared |
+| `prisma:migrate` | Crear y aplicar migración (dev) |
+| `prisma:migrate:create` | Crear migración sin aplicar |
+| `prisma:migrate:status` | Ver estado de migraciones |
+| `prisma:deploy` | Aplicar migraciones pendientes (producción) |
+| `prisma:reset` | Resetear DB completa |
+| `prisma:push` | Sync schema sin migración (prototipado) |
+| `prisma:studio` | UI visual para explorar la DB |
+
+### Frontend (`apps/web`)
+
+| Script | Descripción |
+|---|---|
+| `dev` | Servidor de desarrollo en `:3000` |
+| `build` | Build de producción |
+| `start` | Servidor desde build de producción |
+| `lint` | ESLint |
