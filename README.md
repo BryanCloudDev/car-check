@@ -72,7 +72,20 @@ pnpm --filter backend prisma:migrate
 
 Crea y aplica todas las migraciones pendientes sobre la base de datos local.
 
-### 5. Iniciar el servidor de desarrollo
+### 5. Cargar datos de prueba
+
+```bash
+pnpm --filter backend prisma:seed
+```
+
+Crea un taller demo y un usuario ADMIN de prueba en la base de datos local. Es idempotente: se puede correr más de una vez sin duplicar datos.
+
+| Campo | Valor |
+|---|---|
+| Email | `admin@tallercheck.sv` |
+| Contraseña | `admin123` _(placeholder hasta que CAR-8 implemente bcrypt)_ |
+
+### 6. Iniciar el servidor de desarrollo
 
 ```bash
 pnpm dev
@@ -332,6 +345,7 @@ El frontend se despliega automáticamente al hacer merge a `main`.
 | `prisma:deploy` | Aplicar migraciones pendientes (producción) |
 | `prisma:reset` | Resetear DB completa |
 | `prisma:push` | Sync schema sin migración (prototipado) |
+| `prisma:seed` | Cargar datos de prueba en la DB local |
 | `prisma:studio` | UI visual para explorar la DB |
 
 ### Frontend (`apps/web`)
