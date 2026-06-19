@@ -1,5 +1,5 @@
 import { PrismaClient } from '../generated/prisma';
-import { createHash } from 'crypto';
+import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
@@ -14,8 +14,7 @@ async function main() {
     },
   });
 
-  // Dev-only placeholder — CAR-8 will replace this with bcrypt.
-  const devHash = createHash('sha256').update('admin123').digest('hex');
+  const passwordHash = await bcrypt.hash('admin123', 10);
 
   const user = await prisma.user.upsert({
     where: { email: 'admin@tallercheck.sv' },
@@ -23,7 +22,7 @@ async function main() {
     create: {
       name: 'Admin Demo',
       email: 'admin@tallercheck.sv',
-      passwordHash: devHash,
+      passwordHash,
       role: 'ADMIN',
       workshopId: workshop.id,
     },

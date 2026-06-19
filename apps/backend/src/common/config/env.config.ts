@@ -8,4 +8,8 @@ export const envConfiguration = () => ({
     name: process.env.POSTGRES_DB,
     port: parseInt(process.env.POSTGRES_PORT ?? '5432', 10),
   },
+  jwt: {
+    secret: process.env.JWT_SECRET,
+    expiresIn: '24h',
+  },
 });
