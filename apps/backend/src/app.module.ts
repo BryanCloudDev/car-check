@@ -5,6 +5,7 @@ import { JoiValidationSchema } from './common/config/joi.validation';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { WorkshopScopeModule } from './common/workshop-scope/workshop-scope.module';
+import { VehiclesModule } from './vehicles/vehicles.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { WorkshopScopeModule } from './common/workshop-scope/workshop-scope.modu
     PrismaModule,
     WorkshopScopeModule,
     AuthModule,
+    VehiclesModule,
   ],
   controllers: [],
   providers: [],
