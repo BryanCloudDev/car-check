@@ -7,9 +7,11 @@ import { ConfigService } from '@nestjs/config';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { randomUUID } from 'crypto';
-import { Prisma } from '../../generated/prisma/client';
+import { MediaType, Prisma } from '../../generated/prisma/client';
 import { PrismaErrorCode } from '../common/constants';
+import { PrismaService } from '../prisma/prisma.service';
 import { WorkshopScopeService } from '../common/workshop-scope/workshop-scope.service';
+import { ConfirmUploadDto } from './dto/confirm-upload.dto';
 import { CreateUploadUrlDto } from './dto/create-upload-url.dto';
 import {
   ALLOWED_IMAGE_TYPES,
@@ -24,6 +26,7 @@ export class MediaService {
 
   constructor(
     private readonly config: ConfigService,
+    private readonly prisma: PrismaService,
     private readonly scope: WorkshopScopeService,
   ) {
     this.s3 = new S3Client({
@@ -55,6 +58,28 @@ export class MediaService {
     });
 
     return { uploadUrl, key };
+  }
+
+  async confirmUpload(
+    workshopId: string,
+    orderId: string,
+    dto: ConfirmUploadDto,
+  ) {
+    await this.assertOrderBelongsToWorkshop(workshopId, orderId);
+
+    const isImage = (ALLOWED_IMAGE_TYPES as readonly string[]).includes(
+      dto.contentType,
+    );
+
+    return this.prisma.mediaAsset.create({
+      data: {
+        key: dto.key,
+        type: isImage ? MediaType.IMAGEN : MediaType.VIDEO,
+        contentType: dto.contentType,
+        sizeBytes: dto.sizeBytes,
+        workOrderId: orderId,
+      },
+    });
   }
 
   private async assertOrderBelongsToWorkshop(

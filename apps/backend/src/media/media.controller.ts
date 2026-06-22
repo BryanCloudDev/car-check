@@ -10,6 +10,7 @@ import {
 import { CurrentWorkshop } from '../auth/decorators/current-workshop.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { MediaService } from './media.service';
+import { ConfirmUploadDto } from './dto/confirm-upload.dto';
 import { CreateUploadUrlDto } from './dto/create-upload-url.dto';
 
 @UseGuards(JwtAuthGuard)
@@ -25,5 +26,14 @@ export class MediaController {
     @Body() dto: CreateUploadUrlDto,
   ) {
     return this.mediaService.createUploadUrl(workshopId, orderId, dto);
+  }
+
+  @Post(':orderId/media/confirm')
+  confirmUpload(
+    @CurrentWorkshop() workshopId: string,
+    @Param('orderId') orderId: string,
+    @Body() dto: ConfirmUploadDto,
+  ) {
+    return this.mediaService.confirmUpload(workshopId, orderId, dto);
   }
 }
