@@ -3,7 +3,6 @@ import {
   ArrayMinSize,
   IsArray,
   IsDateString,
-  IsEnum,
   IsInt,
   IsOptional,
   IsString,
@@ -13,10 +12,6 @@ import {
 import { CreateOrderItemDto } from './create-order-item.dto';
 
 export class UpdateWorkOrderDto {
-  @IsEnum(['RECIBIDO', 'EN_PROCESO', 'LISTO', 'ENTREGADO'])
-  @IsOptional()
-  status?: 'RECIBIDO' | 'EN_PROCESO' | 'LISTO' | 'ENTREGADO';
-
   @Type(() => Number)
   @IsInt()
   @Min(0)

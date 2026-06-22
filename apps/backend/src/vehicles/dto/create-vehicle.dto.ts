@@ -7,8 +7,7 @@ import {
   Max,
   Min,
 } from 'class-validator';
-
-const VIN_REGEX = /^[A-HJ-NPR-Z0-9]{17}$/;
+import { VIN_REGEX } from '../../common/constants';
 
 export class CreateVehicleDto {
   @Transform(({ value }) =>

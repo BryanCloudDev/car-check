@@ -1,9 +1,16 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Prisma } from '../../generated/prisma/client';
+import { PrismaErrorCode } from '../common/constants';
 import { PrismaService } from '../prisma/prisma.service';
 import { WorkshopScopeService } from '../common/workshop-scope/workshop-scope.service';
+import { AdvanceStatusDto } from './dto/advance-status.dto';
 import { CreateWorkOrderDto } from './dto/create-work-order.dto';
 import { UpdateWorkOrderDto } from './dto/update-work-order.dto';
+import { VALID_TRANSITIONS } from './work-orders.constants';
 
 @Injectable()
 export class WorkOrdersService {
@@ -34,7 +41,7 @@ export class WorkOrdersService {
     } catch (e) {
       if (
         e instanceof Prisma.PrismaClientKnownRequestError &&
-        e.code === 'P2025'
+        e.code === PrismaErrorCode.NOT_FOUND
       ) {
         throw new NotFoundException('Cliente no encontrado');
       }
@@ -77,11 +84,38 @@ export class WorkOrdersService {
     });
   }
 
+  async advanceStatus(workshopId: string, id: string, dto: AdvanceStatusDto) {
+    const order = await this.scope
+      .for(workshopId)
+      .workOrder.findFirstOrThrow({ where: { id } })
+      .catch((e: unknown) => {
+        if (
+          e instanceof Prisma.PrismaClientKnownRequestError &&
+          e.code === PrismaErrorCode.NOT_FOUND
+        ) {
+          throw new NotFoundException('Orden no encontrada');
+        }
+        throw e;
+      });
+
+    const allowed = VALID_TRANSITIONS[order.status];
+    if (!allowed.includes(dto.status)) {
+      throw new BadRequestException(
+        `Transición inválida: ${order.status} → ${dto.status}`,
+      );
+    }
+
+    return this.scope.for(workshopId).workOrder.update({
+      where: { id },
+      data: { status: dto.status },
+      include: { items: true },
+    });
+  }
+
   async update(workshopId: string, id: string, dto: UpdateWorkOrderDto) {
-    const { status, mileage, notes, serviceDate, items } = dto;
+    const { mileage, notes, serviceDate, items } = dto;
 
     const data: Prisma.WorkOrderUncheckedUpdateInput = {
-      ...(status !== undefined && { status }),
       ...(mileage !== undefined && { mileage }),
       ...(notes !== undefined && { notes }),
       ...(serviceDate !== undefined && { serviceDate: new Date(serviceDate) }),
@@ -114,7 +148,7 @@ export class WorkOrdersService {
     } catch (e) {
       if (
         e instanceof Prisma.PrismaClientKnownRequestError &&
-        e.code === 'P2025'
+        e.code === PrismaErrorCode.NOT_FOUND
       ) {
         throw new NotFoundException('Orden no encontrada');
       }

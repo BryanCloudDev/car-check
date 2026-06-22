@@ -11,9 +11,8 @@ import {
   Min,
   ValidateNested,
 } from 'class-validator';
+import { VIN_REGEX } from '../../common/constants';
 import { CreateOrderItemDto } from './create-order-item.dto';
-
-const VIN_REGEX = /^[A-HJ-NPR-Z0-9]{17}$/;
 
 export class CreateWorkOrderDto {
   @Transform(({ value }) =>

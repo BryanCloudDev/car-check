@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '../../generated/prisma/client';
+import { PrismaErrorCode } from '../common/constants';
 import { WorkshopScopeService } from '../common/workshop-scope/workshop-scope.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
@@ -22,7 +23,7 @@ export class CustomersService {
     } catch (e) {
       if (
         e instanceof Prisma.PrismaClientKnownRequestError &&
-        e.code === 'P2025'
+        e.code === PrismaErrorCode.NOT_FOUND
       ) {
         throw new NotFoundException('Cliente no encontrado');
       }
@@ -43,7 +44,7 @@ export class CustomersService {
     } catch (e) {
       if (
         e instanceof Prisma.PrismaClientKnownRequestError &&
-        e.code === 'P2025'
+        e.code === PrismaErrorCode.NOT_FOUND
       ) {
         throw new NotFoundException('Cliente no encontrado');
       }
@@ -57,7 +58,7 @@ export class CustomersService {
     } catch (e) {
       if (
         e instanceof Prisma.PrismaClientKnownRequestError &&
-        e.code === 'P2025'
+        e.code === PrismaErrorCode.NOT_FOUND
       ) {
         throw new NotFoundException('Cliente no encontrado');
       }

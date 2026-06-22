@@ -8,10 +8,11 @@ import {
   Min,
   MinLength,
 } from 'class-validator';
+import { OrderItemType } from '../../../generated/prisma/client';
 
 export class CreateOrderItemDto {
-  @IsEnum(['SERVICIO', 'REPUESTO'])
-  type: 'SERVICIO' | 'REPUESTO';
+  @IsEnum(OrderItemType)
+  type: OrderItemType;
 
   @IsString()
   @MinLength(1)

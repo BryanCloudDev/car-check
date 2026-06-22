@@ -11,6 +11,7 @@ import {
 import { CurrentWorkshop } from '../auth/decorators/current-workshop.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { WorkOrdersService } from './work-orders.service';
+import { AdvanceStatusDto } from './dto/advance-status.dto';
 import { CreateWorkOrderDto } from './dto/create-work-order.dto';
 import { UpdateWorkOrderDto } from './dto/update-work-order.dto';
 
@@ -26,6 +27,15 @@ export class WorkOrdersController {
     @Body() dto: CreateWorkOrderDto,
   ) {
     return this.workOrdersService.create(workshopId, dto);
+  }
+
+  @Patch(':id/status')
+  advanceStatus(
+    @CurrentWorkshop() workshopId: string,
+    @Param('id') id: string,
+    @Body() dto: AdvanceStatusDto,
+  ) {
+    return this.workOrdersService.advanceStatus(workshopId, id, dto);
   }
 
   @Patch(':id')
