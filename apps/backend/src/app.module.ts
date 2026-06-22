@@ -8,6 +8,7 @@ import { WorkshopScopeModule } from './common/workshop-scope/workshop-scope.modu
 import { VehiclesModule } from './vehicles/vehicles.module';
 import { CustomersModule } from './customers/customers.module';
 import { WorkOrdersModule } from './work-orders/work-orders.module';
+import { MediaModule } from './media/media.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { WorkOrdersModule } from './work-orders/work-orders.module';
     VehiclesModule,
     CustomersModule,
     WorkOrdersModule,
+    MediaModule,
   ],
   controllers: [],
   providers: [],
