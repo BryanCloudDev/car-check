@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { WorkshopScopeModule } from './common/workshop-scope/workshop-scope.module';
 import { VehiclesModule } from './vehicles/vehicles.module';
 import { CustomersModule } from './customers/customers.module';
+import { WorkOrdersModule } from './work-orders/work-orders.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { CustomersModule } from './customers/customers.module';
     AuthModule,
     VehiclesModule,
     CustomersModule,
+    WorkOrdersModule,
   ],
   controllers: [],
   providers: [],
