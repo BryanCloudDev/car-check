@@ -6,6 +6,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { WorkshopScopeModule } from './common/workshop-scope/workshop-scope.module';
 import { VehiclesModule } from './vehicles/vehicles.module';
+import { CustomersModule } from './customers/customers.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { VehiclesModule } from './vehicles/vehicles.module';
     WorkshopScopeModule,
     AuthModule,
     VehiclesModule,
+    CustomersModule,
   ],
   controllers: [],
   providers: [],
