@@ -3,6 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import PDFDocument from 'pdfkit';
 import { Prisma } from '../../generated/prisma/client';
 import { PrismaErrorCode } from '../common/constants';
 import { PrismaService } from '../prisma/prisma.service';
@@ -109,6 +110,117 @@ export class WorkOrdersService {
       where: { id },
       data: { status: dto.status },
       include: { items: true },
+    });
+  }
+
+  async getReceipt(workshopId: string, id: string): Promise<Buffer> {
+    const order = await this.prisma.workOrder
+      .findFirstOrThrow({
+        where: { id, workshopId },
+        include: { vehicle: true, customer: true, workshop: true, items: true },
+      })
+      .catch((e: unknown) => {
+        if (
+          e instanceof Prisma.PrismaClientKnownRequestError &&
+          e.code === PrismaErrorCode.NOT_FOUND
+        ) {
+          throw new NotFoundException('Orden no encontrada');
+        }
+        throw e;
+      });
+
+    return new Promise<Buffer>((resolve, reject) => {
+      const doc = new PDFDocument({ margin: 50 });
+      const chunks: Buffer[] = [];
+      doc.on('data', (chunk: Buffer) => chunks.push(chunk));
+      doc.on('end', () => resolve(Buffer.concat(chunks)));
+      doc.on('error', reject);
+
+      // Header
+      doc.fontSize(18).font('Helvetica-Bold').text(order.workshop.name, { align: 'center' });
+      doc.fontSize(14).font('Helvetica').text('Comprobante de Orden', { align: 'center' });
+      doc.moveDown();
+
+      // Order info
+      doc.fontSize(11).font('Helvetica-Bold').text('Datos de la Orden');
+      doc.font('Helvetica');
+      doc.text(`ID: ${id.slice(0, 8).toUpperCase()}`);
+      doc.text(`Fecha: ${order.createdAt.toLocaleDateString('es-MX')}`);
+      doc.text(`Estado: ${order.status}`);
+      if (order.serviceDate) {
+        doc.text(`Fecha de servicio: ${order.serviceDate.toLocaleDateString('es-MX')}`);
+      }
+      if (order.mileage) {
+        doc.text(`Kilometraje: ${order.mileage}`);
+      }
+      doc.moveDown();
+
+      // Customer
+      doc.font('Helvetica-Bold').text('Cliente');
+      doc.font('Helvetica');
+      doc.text(`Nombre: ${order.customer.name}`);
+      if (order.customer.phone) doc.text(`Teléfono: ${order.customer.phone}`);
+      if (order.customer.email) doc.text(`Email: ${order.customer.email}`);
+      doc.moveDown();
+
+      // Vehicle
+      doc.font('Helvetica-Bold').text('Vehículo');
+      doc.font('Helvetica');
+      doc.text(`VIN: ${order.vehicle.vin}`);
+      if (order.vehicle.make) doc.text(`Marca: ${order.vehicle.make}`);
+      if (order.vehicle.model) doc.text(`Modelo: ${order.vehicle.model}`);
+      if (order.vehicle.year) doc.text(`Año: ${order.vehicle.year}`);
+      if (order.vehicle.plate) doc.text(`Placa: ${order.vehicle.plate}`);
+      doc.moveDown();
+
+      // Items table header
+      doc.font('Helvetica-Bold').text('Servicios y Repuestos');
+      doc.moveDown(0.5);
+      const tableTop = doc.y;
+      const colType = 50;
+      const colDesc = 110;
+      const colQty = 330;
+      const colPrice = 380;
+      const colSub = 450;
+
+      doc.fontSize(10);
+      doc.text('Tipo', colType, tableTop);
+      doc.text('Descripción', colDesc, tableTop);
+      doc.text('Cant.', colQty, tableTop);
+      doc.text('P. Unit.', colPrice, tableTop);
+      doc.text('Subtotal', colSub, tableTop);
+      doc.moveTo(50, doc.y + 2).lineTo(560, doc.y + 2).stroke();
+      doc.moveDown(0.5);
+
+      for (const item of order.items) {
+        const rowY = doc.y;
+        const subtotal = item.quantity * Number(item.unitPrice);
+        doc.font('Helvetica').fontSize(10);
+        doc.text(item.type, colType, rowY);
+        doc.text(item.description, colDesc, rowY, { width: 200 });
+        doc.text(String(item.quantity), colQty, rowY);
+        doc.text(`$${Number(item.unitPrice).toFixed(2)}`, colPrice, rowY);
+        doc.text(`$${subtotal.toFixed(2)}`, colSub, rowY);
+        doc.moveDown();
+      }
+
+      doc.moveTo(50, doc.y).lineTo(560, doc.y).stroke();
+      doc.moveDown(0.5);
+
+      // Total
+      doc.font('Helvetica-Bold').fontSize(12).text(
+        `Total: $${Number(order.cost).toFixed(2)}`,
+        { align: 'right' },
+      );
+
+      // Notes
+      if (order.notes) {
+        doc.moveDown();
+        doc.font('Helvetica-Bold').fontSize(11).text('Notas');
+        doc.font('Helvetica').fontSize(10).text(order.notes);
+      }
+
+      doc.end();
     });
   }
 

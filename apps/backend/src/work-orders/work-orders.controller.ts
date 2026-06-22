@@ -1,11 +1,14 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Param,
   Patch,
   Post,
+  Res,
+  StreamableFile,
   UseGuards,
 } from '@nestjs/common';
 import { CurrentWorkshop } from '../auth/decorators/current-workshop.decorator';
@@ -27,6 +30,20 @@ export class WorkOrdersController {
     @Body() dto: CreateWorkOrderDto,
   ) {
     return this.workOrdersService.create(workshopId, dto);
+  }
+
+  @Get(':id/receipt.pdf')
+  async getReceipt(
+    @CurrentWorkshop() workshopId: string,
+    @Param('id') id: string,
+    @Res({ passthrough: true }) res: any,
+  ): Promise<StreamableFile> {
+    const buffer = await this.workOrdersService.getReceipt(workshopId, id);
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="receipt-${id}.pdf"`,
+    });
+    return new StreamableFile(buffer);
   }
 
   @Patch(':id/status')
