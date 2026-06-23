@@ -1,0 +1,22 @@
+{
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "rootDir": "..",
+  "testEnvironment": "node",
+  "testMatch": ["<rootDir>/test/**/*.e2e-spec.ts"],
+  "transform": {
+    "^.+\\.(t|j)s$": ["ts-jest", {
+      "tsconfig": {
+        "module": "CommonJS",
+        "moduleResolution": "node",
+        "esModuleInterop": true,
+        "resolvePackageJsonExports": false
+      }
+    }]
+  },
+  "moduleNameMapper": {
+    "^(\\.\\.?/.+)\\.js$": "$1"
+  },
+  "setupFiles": ["<rootDir>/test/jest-e2e-setup.js"],
+  "testTimeout": 30000,
+  "forceExit": true
+}
