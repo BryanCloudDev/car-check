@@ -17,13 +17,13 @@ infra/
 
 ## Requisitos
 
-| Herramienta | Versión mínima | Instalación |
-|---|---|---|
-| Node.js | 20 | https://nodejs.org |
-| pnpm | 9 | `npm i -g pnpm@9` |
-| Docker + Docker Compose | cualquiera reciente | https://docs.docker.com/get-docker |
-| Terraform | 1.6+ | https://developer.hashicorp.com/terraform/install _(solo para infra S3)_ |
-| AWS CLI | 2 | https://aws.amazon.com/cli _(solo para infra S3)_ |
+| Herramienta             | Versión mínima      | Instalación                                                              |
+| ----------------------- | ------------------- | ------------------------------------------------------------------------ |
+| Node.js                 | 20                  | https://nodejs.org                                                       |
+| pnpm                    | 9                   | `npm i -g pnpm@9`                                                        |
+| Docker + Docker Compose | cualquiera reciente | https://docs.docker.com/get-docker                                       |
+| Terraform               | 1.6+                | https://developer.hashicorp.com/terraform/install _(solo para infra S3)_ |
+| AWS CLI                 | 2                   | https://aws.amazon.com/cli _(solo para infra S3)_                        |
 
 ---
 
@@ -80,9 +80,9 @@ pnpm --filter backend prisma:seed
 
 Crea un taller demo y un usuario ADMIN de prueba en la base de datos local. Es idempotente: se puede correr más de una vez sin duplicar datos.
 
-| Campo | Valor |
-|---|---|
-| Email | `admin@tallercheck.sv` |
+| Campo      | Valor                                                        |
+| ---------- | ------------------------------------------------------------ |
+| Email      | `admin@tallercheck.sv`                                       |
 | Contraseña | `admin123` _(placeholder hasta que CAR-8 implemente bcrypt)_ |
 
 ### 6. Iniciar el servidor de desarrollo
@@ -99,13 +99,13 @@ Levanta backend (`:3001`) y frontend (`:3000`) en paralelo con hot-reload. Turbo
 
 Todos se ejecutan desde la **raíz** del monorepo.
 
-| Comando | Qué hace |
-|---|---|
-| `pnpm dev` | Levanta backend + frontend con watch mode |
-| `pnpm build` | Compila todos los paquetes en orden correcto |
-| `pnpm lint` | Corre ESLint en todos los paquetes |
+| Comando            | Qué hace                                        |
+| ------------------ | ----------------------------------------------- |
+| `pnpm dev`         | Levanta backend + frontend con watch mode       |
+| `pnpm build`       | Compila todos los paquetes en orden correcto    |
+| `pnpm lint`        | Corre ESLint en todos los paquetes              |
 | `pnpm check-types` | Verifica tipos TypeScript en todos los paquetes |
-| `pnpm format` | Formatea `.ts/.tsx/.md` con Prettier |
+| `pnpm format`      | Formatea `.ts/.tsx/.md` con Prettier            |
 
 Para correr un comando solo en un paquete:
 
@@ -116,20 +116,67 @@ pnpm --filter web <script>
 
 ---
 
+## Git Hooks (Husky)
+
+Los hooks se instalan automáticamente al correr `pnpm install` gracias a Husky.
+
+### pre-commit — corre en cada `git commit`
+
+| Paso           | Qué hace                                                                            |
+| -------------- | ----------------------------------------------------------------------------------- |
+| `lint-staged`  | Prettier + ESLint solo sobre los archivos staged (más rápido que lintear todo)      |
+| `check-types`  | Verificación de tipos TypeScript en todos los paquetes                              |
+| `backend test` | Suite de tests unitarios del backend (`--passWithNoTests` no falla si no hay tests) |
+
+> Si alguno de estos pasos falla, el commit se cancela. Corregir el error y volver a intentarlo.
+
+### pre-push — corre en cada `git push`
+
+| Paso               | Qué hace                                                             |
+| ------------------ | -------------------------------------------------------------------- |
+| `build`            | Build completo de todos los paquetes (asegura que compila en limpio) |
+| `backend test:e2e` | Suite de tests end-to-end del backend contra la DB local             |
+
+> El push se cancela si el build falla o algún test e2e no pasa.
+
+---
+
+## API — Documentación interactiva (Swagger)
+
+Con el backend corriendo, la documentación completa de la API está disponible en:
+
+```
+http://localhost:3001/docs
+```
+
+Incluye todos los endpoints con esquemas de request/response, ejemplos de valores y soporte para autenticación JWT directamente desde el navegador.
+
+**Cómo autenticarse en Swagger UI:**
+
+1. Expandir `POST /api/auth/login` → **Try it out** → ejecutar con credenciales válidas
+2. Copiar el `accessToken` del response
+3. Click en el botón **Authorize** 🔒 (arriba a la derecha)
+4. Pegar el token → **Authorize** → **Close**
+5. Todos los endpoints protegidos quedan autenticados en la sesión
+
+> El token se mantiene entre navegaciones gracias a `persistAuthorization`.
+
+---
+
 ## Base de datos (Prisma)
 
 Todos estos comandos se ejecutan con el prefijo `pnpm --filter backend` desde la raíz.
 
-| Comando | Qué hace | Cuándo usarlo |
-|---|---|---|
-| `prisma:generate` | Regenera Prisma Client y tipos en `packages/shared` | Después de cambiar `schema.prisma` |
-| `prisma:migrate` | Crea y aplica una migración nueva (interactivo) | Al agregar/modificar modelos en desarrollo |
-| `prisma:migrate:create` | Crea el SQL de migración sin aplicarla | Para revisar el SQL antes de aplicar |
-| `prisma:migrate:status` | Muestra qué migraciones están aplicadas | Para diagnosticar el estado de la DB |
-| `prisma:deploy` | Aplica migraciones pendientes sin interacción | **Deploy a producción** |
-| `prisma:reset` | Borra y recrea la DB desde cero | Reset completo en desarrollo |
-| `prisma:push` | Sincroniza el schema sin crear migración | Prototipado rápido (nunca en prod) |
-| `prisma:studio` | Abre UI visual para explorar datos | Debugging e inspección manual |
+| Comando                 | Qué hace                                            | Cuándo usarlo                              |
+| ----------------------- | --------------------------------------------------- | ------------------------------------------ |
+| `prisma:generate`       | Regenera Prisma Client y tipos en `packages/shared` | Después de cambiar `schema.prisma`         |
+| `prisma:migrate`        | Crea y aplica una migración nueva (interactivo)     | Al agregar/modificar modelos en desarrollo |
+| `prisma:migrate:create` | Crea el SQL de migración sin aplicarla              | Para revisar el SQL antes de aplicar       |
+| `prisma:migrate:status` | Muestra qué migraciones están aplicadas             | Para diagnosticar el estado de la DB       |
+| `prisma:deploy`         | Aplica migraciones pendientes sin interacción       | **Deploy a producción**                    |
+| `prisma:reset`          | Borra y recrea la DB desde cero                     | Reset completo en desarrollo               |
+| `prisma:push`           | Sincroniza el schema sin crear migración            | Prototipado rápido (nunca en prod)         |
+| `prisma:studio`         | Abre UI visual para explorar datos                  | Debugging e inspección manual              |
 
 ### Flujo al modificar el schema
 
@@ -150,12 +197,14 @@ Esta sección solo es necesaria para quien va a crear o modificar la infraestruc
 ### 1. Instalar Terraform
 
 **macOS:**
+
 ```bash
 brew tap hashicorp/tap
 brew install hashicorp/tap/terraform
 ```
 
 **Linux (Debian/Ubuntu):**
+
 ```bash
 wget -O - https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
 echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
@@ -165,6 +214,7 @@ sudo apt update && sudo apt install terraform
 **Windows:** descargar el instalador desde https://developer.hashicorp.com/terraform/install
 
 Verificar instalación:
+
 ```bash
 terraform -version   # debe mostrar >= 1.6
 ```
@@ -172,11 +222,13 @@ terraform -version   # debe mostrar >= 1.6
 ### 2. Instalar y configurar AWS CLI
 
 **macOS:**
+
 ```bash
 brew install awscli
 ```
 
 **Linux:**
+
 ```bash
 curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
 unzip awscliv2.zip && sudo ./aws/install
@@ -185,6 +237,7 @@ unzip awscliv2.zip && sudo ./aws/install
 **Windows:** descargar el instalador desde https://aws.amazon.com/cli
 
 Verificar instalación:
+
 ```bash
 aws --version   # debe mostrar >= 2
 ```
@@ -194,6 +247,7 @@ aws --version   # debe mostrar >= 2
 Terraform necesita un usuario IAM (o role) con permisos para crear recursos S3 e IAM. Si no tenés acceso a la consola AWS para crear ese usuario, pedíselo a quien administre la cuenta.
 
 Los permisos mínimos que necesita ese usuario administrador son:
+
 - `s3:CreateBucket`, `s3:PutBucketPolicy`, `s3:PutBucketCORS`, `s3:PutEncryptionConfiguration`, `s3:PutPublicAccessBlock`
 - `iam:CreateUser`, `iam:CreateAccessKey`, `iam:PutUserPolicy`
 
@@ -221,6 +275,7 @@ cp terraform.tfvars.example terraform.tfvars
 ```
 
 Editar `terraform.tfvars` y ajustar al menos:
+
 - `env`: cambiar a `"production"` si es el entorno de prod
 - `allowed_origins`: agregar el dominio real de Vercel junto a `localhost:3000`
 
@@ -276,19 +331,20 @@ Configuración en `.github/workflows/ci.yml`.
 El backend se despliega automáticamente al hacer merge a `main` usando `apps/backend/Dockerfile`.
 
 **Variables que Railway inyecta automáticamente:**
+
 - `DATABASE_URL` — base de datos PostgreSQL de Railway
 - `PORT`
 
 **Variables que hay que agregar manualmente en el dashboard de Railway:**
 
-| Variable | Valor |
-|---|---|
-| `NODE_ENV` | `production` |
-| `JWT_SECRET` | `openssl rand -base64 64` |
-| `JWT_EXPIRATION` | `86400s` |
-| `AWS_REGION` | región del bucket S3 |
-| `S3_BUCKET` | `terraform output bucket_name` |
-| `AWS_ACCESS_KEY_ID` | `terraform output iam_access_key_id` |
+| Variable                | Valor                                         |
+| ----------------------- | --------------------------------------------- |
+| `NODE_ENV`              | `production`                                  |
+| `JWT_SECRET`            | `openssl rand -base64 64`                     |
+| `JWT_EXPIRATION`        | `86400s`                                      |
+| `AWS_REGION`            | región del bucket S3                          |
+| `S3_BUCKET`             | `terraform output bucket_name`                |
+| `AWS_ACCESS_KEY_ID`     | `terraform output iam_access_key_id`          |
 | `AWS_SECRET_ACCESS_KEY` | `terraform output -raw iam_secret_access_key` |
 
 **Migraciones en producción** — correr una sola vez después de cada deploy que cambie el schema:
@@ -304,13 +360,14 @@ railway run pnpm --filter backend prisma:deploy
 El frontend se despliega automáticamente al hacer merge a `main`.
 
 **Configuración en Vercel:**
+
 - Root Directory: `apps/web`
 - Framework Preset: Next.js (autodetectado)
 
 **Variable de entorno en Vercel:**
 
-| Variable | Valor |
-|---|---|
+| Variable  | Valor                                                                               |
+| --------- | ----------------------------------------------------------------------------------- |
 | `API_URL` | URL pública del backend en Railway (ej: `https://car-check-backend.up.railway.app`) |
 
 ---
@@ -319,40 +376,40 @@ El frontend se despliega automáticamente al hacer merge a `main`.
 
 ### Raíz
 
-| Script | Descripción |
-|---|---|
-| `pnpm dev` | Desarrollo con watch en todos los paquetes |
-| `pnpm build` | Build de producción completo |
-| `pnpm lint` | ESLint en todos los paquetes |
+| Script             | Descripción                                 |
+| ------------------ | ------------------------------------------- |
+| `pnpm dev`         | Desarrollo con watch en todos los paquetes  |
+| `pnpm build`       | Build de producción completo                |
+| `pnpm lint`        | ESLint en todos los paquetes                |
 | `pnpm check-types` | Type check TypeScript en todos los paquetes |
-| `pnpm format` | Formatear código con Prettier |
+| `pnpm format`      | Formatear código con Prettier               |
 
 ### Backend (`apps/backend`)
 
-| Script | Descripción |
-|---|---|
-| `start:dev` | Servidor con hot-reload (vía `pnpm dev` desde raíz) |
-| `start:prod` | Servidor desde build compilado |
-| `build` | Compilar TypeScript a `dist/` |
-| `test` | Tests unitarios con Jest |
-| `test:watch` | Tests en modo watch |
-| `test:cov` | Tests con reporte de cobertura |
-| `test:e2e` | Tests end-to-end |
-| `prisma:generate` | Regenerar Prisma Client + tipos shared |
-| `prisma:migrate` | Crear y aplicar migración (dev) |
-| `prisma:migrate:create` | Crear migración sin aplicar |
-| `prisma:migrate:status` | Ver estado de migraciones |
-| `prisma:deploy` | Aplicar migraciones pendientes (producción) |
-| `prisma:reset` | Resetear DB completa |
-| `prisma:push` | Sync schema sin migración (prototipado) |
-| `prisma:seed` | Cargar datos de prueba en la DB local |
-| `prisma:studio` | UI visual para explorar la DB |
+| Script                  | Descripción                                         |
+| ----------------------- | --------------------------------------------------- |
+| `start:dev`             | Servidor con hot-reload (vía `pnpm dev` desde raíz) |
+| `start:prod`            | Servidor desde build compilado                      |
+| `build`                 | Compilar TypeScript a `dist/`                       |
+| `test`                  | Tests unitarios con Jest                            |
+| `test:watch`            | Tests en modo watch                                 |
+| `test:cov`              | Tests con reporte de cobertura                      |
+| `test:e2e`              | Tests end-to-end                                    |
+| `prisma:generate`       | Regenerar Prisma Client + tipos shared              |
+| `prisma:migrate`        | Crear y aplicar migración (dev)                     |
+| `prisma:migrate:create` | Crear migración sin aplicar                         |
+| `prisma:migrate:status` | Ver estado de migraciones                           |
+| `prisma:deploy`         | Aplicar migraciones pendientes (producción)         |
+| `prisma:reset`          | Resetear DB completa                                |
+| `prisma:push`           | Sync schema sin migración (prototipado)             |
+| `prisma:seed`           | Cargar datos de prueba en la DB local               |
+| `prisma:studio`         | UI visual para explorar la DB                       |
 
 ### Frontend (`apps/web`)
 
-| Script | Descripción |
-|---|---|
-| `dev` | Servidor de desarrollo en `:3000` |
-| `build` | Build de producción |
+| Script  | Descripción                        |
+| ------- | ---------------------------------- |
+| `dev`   | Servidor de desarrollo en `:3000`  |
+| `build` | Build de producción                |
 | `start` | Servidor desde build de producción |
-| `lint` | ESLint |
+| `lint`  | ESLint                             |
