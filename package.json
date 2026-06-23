@@ -21,10 +21,15 @@
     "node": ">=18"
   },
   "lint-staged": {
-    "*.{ts,tsx}": [
+    "apps/backend/**/*.{ts,tsx}": [
       "prettier --write",
-      "eslint --fix --no-warn-ignored"
+      "eslint --fix --no-warn-ignored --config apps/backend/eslint.config.mjs"
     ],
+    "apps/web/**/*.{ts,tsx}": [
+      "prettier --write",
+      "eslint --fix --no-warn-ignored --config apps/web/eslint.config.mjs"
+    ],
+    "packages/**/*.{ts,tsx}": "prettier --write",
     "*.{js,mjs,cjs,json,md,css}": "prettier --write"
   }
 }
