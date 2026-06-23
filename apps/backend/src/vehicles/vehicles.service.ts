@@ -1,11 +1,15 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { VIN_REGEX } from '../common/constants';
+import { Prisma } from '../../generated/prisma/client';
+import { PrismaErrorCode, VIN_REGEX } from '../common/constants';
 import { PrismaService } from '../prisma/prisma.service';
 import { WorkshopScopeService } from '../common/workshop-scope/workshop-scope.service';
+import { CreateVehicleDto } from './dto/create-vehicle.dto';
+import { UpdateVehicleDto } from './dto/update-vehicle.dto';
 
 @Injectable()
 export class VehiclesService {
@@ -14,12 +18,59 @@ export class VehiclesService {
     private readonly scope: WorkshopScopeService,
   ) {}
 
-  async getHistory(workshopId: string, vin: string) {
-    if (!VIN_REGEX.test(vin)) {
-      throw new BadRequestException('VIN inválido');
+
+  async create(dto: CreateVehicleDto) {
+    try {
+      return await this.prisma.vehicle.create({ data: dto });
+    } catch (e) {
+      if (
+        e instanceof Prisma.PrismaClientKnownRequestError &&
+        e.code === PrismaErrorCode.UNIQUE_VIOLATION
+      ) {
+        throw new ConflictException('Ya existe un vehículo con ese VIN');
+      }
+      throw e;
+    }
+  }
+
+  async findOne(vin: string) {
+    const normalized = this.normalizeVin(vin);
+
+    const vehicle = await this.prisma.vehicle.findUnique({
+      where: { vin: normalized },
+    });
+    if (!vehicle) {
+      throw new NotFoundException('Vehículo no encontrado');
     }
 
-    const vehicle = await this.prisma.vehicle.findUnique({ where: { vin } });
+    return vehicle;
+  }
+
+  async update(vin: string, dto: UpdateVehicleDto) {
+    const normalized = this.normalizeVin(vin);
+
+    try {
+      return await this.prisma.vehicle.update({
+        where: { vin: normalized },
+        data: dto,
+      });
+    } catch (e) {
+      if (
+        e instanceof Prisma.PrismaClientKnownRequestError &&
+        e.code === PrismaErrorCode.NOT_FOUND
+      ) {
+        throw new NotFoundException('Vehículo no encontrado');
+      }
+      throw e;
+    }
+  }
+
+  async getHistory(workshopId: string, vin: string) {
+    const normalized = this.normalizeVin(vin);
+
+    const vehicle = await this.prisma.vehicle.findUnique({
+      where: { vin: normalized },
+    });
     if (!vehicle) {
       throw new NotFoundException('Vehículo no encontrado');
     }
@@ -29,5 +80,13 @@ export class VehiclesService {
       orderBy: [{ serviceDate: 'asc' }, { createdAt: 'asc' }],
       include: { items: true },
     });
+  }
+
+  private normalizeVin(vin: string): string {
+    const normalized = vin.trim().toUpperCase();
+    if (!VIN_REGEX.test(normalized)) {
+      throw new BadRequestException('VIN inválido');
+    }
+    return normalized;
   }
 }

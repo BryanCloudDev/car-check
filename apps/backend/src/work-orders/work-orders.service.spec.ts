@@ -36,7 +36,10 @@ describe('WorkOrdersService.advanceStatus', () => {
     const module = await Test.createTestingModule({
       providers: [
         WorkOrdersService,
-        { provide: PrismaService, useValue: { vehicle: { upsert: jest.fn() } } },
+        {
+          provide: PrismaService,
+          useValue: { vehicle: { upsert: jest.fn() } },
+        },
         {
           provide: WorkshopScopeService,
           useValue: { for: jest.fn() },
@@ -45,7 +48,7 @@ describe('WorkOrdersService.advanceStatus', () => {
     }).compile();
 
     service = module.get(WorkOrdersService);
-    scopeService = module.get(WorkshopScopeService) as jest.Mocked<WorkshopScopeService>;
+    scopeService = module.get(WorkshopScopeService);
   });
 
   describe('transiciones válidas', () => {
@@ -55,13 +58,19 @@ describe('WorkOrdersService.advanceStatus', () => {
       [OrderStatus.EN_PROCESO, OrderStatus.RECIBIDO],
       [OrderStatus.LISTO, OrderStatus.ENTREGADO],
     ])('%s → %s actualiza el estado', async (from, to) => {
-      const { scopedPrisma, updateMock } = makeScopeMock({ id: ORDER_ID, status: from });
+      const { scopedPrisma, updateMock } = makeScopeMock({
+        id: ORDER_ID,
+        status: from,
+      });
       (scopeService.for as jest.Mock).mockReturnValue(scopedPrisma);
 
       await service.advanceStatus(WORKSHOP_ID, ORDER_ID, { status: to });
 
       expect(updateMock).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { id: ORDER_ID }, data: { status: to } }),
+        expect.objectContaining({
+          where: { id: ORDER_ID },
+          data: { status: to },
+        }),
       );
     });
   });
@@ -98,7 +107,9 @@ describe('WorkOrdersService.advanceStatus', () => {
     (scopeService.for as jest.Mock).mockReturnValue(scopedPrisma);
 
     await expect(
-      service.advanceStatus(WORKSHOP_ID, ORDER_ID, { status: OrderStatus.EN_PROCESO }),
+      service.advanceStatus(WORKSHOP_ID, ORDER_ID, {
+        status: OrderStatus.EN_PROCESO,
+      }),
     ).rejects.toThrow(NotFoundException);
   });
 });

@@ -137,8 +137,14 @@ export class WorkOrdersService {
       doc.on('error', reject);
 
       // Header
-      doc.fontSize(18).font('Helvetica-Bold').text(order.workshop.name, { align: 'center' });
-      doc.fontSize(14).font('Helvetica').text('Comprobante de Orden', { align: 'center' });
+      doc
+        .fontSize(18)
+        .font('Helvetica-Bold')
+        .text(order.workshop.name, { align: 'center' });
+      doc
+        .fontSize(14)
+        .font('Helvetica')
+        .text('Comprobante de Orden', { align: 'center' });
       doc.moveDown();
 
       // Order info
@@ -148,7 +154,9 @@ export class WorkOrdersService {
       doc.text(`Fecha: ${order.createdAt.toLocaleDateString('es-MX')}`);
       doc.text(`Estado: ${order.status}`);
       if (order.serviceDate) {
-        doc.text(`Fecha de servicio: ${order.serviceDate.toLocaleDateString('es-MX')}`);
+        doc.text(
+          `Fecha de servicio: ${order.serviceDate.toLocaleDateString('es-MX')}`,
+        );
       }
       if (order.mileage) {
         doc.text(`Kilometraje: ${order.mileage}`);
@@ -189,7 +197,10 @@ export class WorkOrdersService {
       doc.text('Cant.', colQty, tableTop);
       doc.text('P. Unit.', colPrice, tableTop);
       doc.text('Subtotal', colSub, tableTop);
-      doc.moveTo(50, doc.y + 2).lineTo(560, doc.y + 2).stroke();
+      doc
+        .moveTo(50, doc.y + 2)
+        .lineTo(560, doc.y + 2)
+        .stroke();
       doc.moveDown(0.5);
 
       for (const item of order.items) {
@@ -208,10 +219,10 @@ export class WorkOrdersService {
       doc.moveDown(0.5);
 
       // Total
-      doc.font('Helvetica-Bold').fontSize(12).text(
-        `Total: $${Number(order.cost).toFixed(2)}`,
-        { align: 'right' },
-      );
+      doc
+        .font('Helvetica-Bold')
+        .fontSize(12)
+        .text(`Total: $${Number(order.cost).toFixed(2)}`, { align: 'right' });
 
       // Notes
       if (order.notes) {

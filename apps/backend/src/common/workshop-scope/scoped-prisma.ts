@@ -54,7 +54,9 @@ export class ScopedPrisma {
       } as Prisma.CustomerUpdateArgs),
 
     delete: (
-      args: Omit<Prisma.CustomerDeleteArgs, 'where'> & { where: { id: string } },
+      args: Omit<Prisma.CustomerDeleteArgs, 'where'> & {
+        where: { id: string };
+      },
     ) =>
       this.prisma.customer.delete({
         ...(args as object),
@@ -102,7 +104,9 @@ export class ScopedPrisma {
       } as Prisma.WorkOrderUpdateArgs),
 
     delete: (
-      args: Omit<Prisma.WorkOrderDeleteArgs, 'where'> & { where: { id: string } },
+      args: Omit<Prisma.WorkOrderDeleteArgs, 'where'> & {
+        where: { id: string };
+      },
     ) =>
       this.prisma.workOrder.delete({
         ...(args as object),

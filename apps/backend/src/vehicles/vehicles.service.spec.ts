@@ -1,5 +1,11 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { Test } from '@nestjs/testing';
+import { Prisma } from '../../generated/prisma/client';
+import { PrismaErrorCode } from '../common/constants';
 import { PrismaService } from '../prisma/prisma.service';
 import { WorkshopScopeService } from '../common/workshop-scope/workshop-scope.service';
 import { VehiclesService } from './vehicles.service';
@@ -9,83 +15,176 @@ const VEHICLE_ID = 'vehicle-1';
 const VALID_VIN = 'WBA3A5G59DNP26082';
 const INVALID_VIN = 'INVALID_VIN_123';
 
-describe('VehiclesService.getHistory', () => {
+function knownError(code: string) {
+  return new Prisma.PrismaClientKnownRequestError('boom', {
+    code,
+    clientVersion: 'test',
+  });
+}
+
+describe('VehiclesService', () => {
   let service: VehiclesService;
-  let prisma: jest.Mocked<PrismaService>;
-  let scopeService: jest.Mocked<WorkshopScopeService>;
+  const findUniqueMock = jest.fn();
+  const createMock = jest.fn();
+  const updateMock = jest.fn();
+  const forMock = jest.fn();
 
   beforeEach(async () => {
+    findUniqueMock.mockReset();
+    createMock.mockReset();
+    updateMock.mockReset();
+    forMock.mockReset();
+
     const module = await Test.createTestingModule({
       providers: [
         VehiclesService,
         {
           provide: PrismaService,
-          useValue: { vehicle: { findUnique: jest.fn() } },
+          useValue: {
+            vehicle: {
+              findUnique: findUniqueMock,
+              create: createMock,
+              update: updateMock,
+            },
+          },
         },
         {
           provide: WorkshopScopeService,
-          useValue: { for: jest.fn() },
+          useValue: { for: forMock },
         },
       ],
     }).compile();
 
     service = module.get(VehiclesService);
-    prisma = module.get(PrismaService) as jest.Mocked<PrismaService>;
-    scopeService = module.get(WorkshopScopeService) as jest.Mocked<WorkshopScopeService>;
   });
 
-  it('lanza BadRequestException si el VIN tiene formato inválido', async () => {
-    await expect(
-      service.getHistory(WORKSHOP_ID, INVALID_VIN),
-    ).rejects.toThrow(BadRequestException);
+  describe('create', () => {
+    it('crea el vehículo con los datos recibidos', async () => {
+      const created = { id: VEHICLE_ID, vin: VALID_VIN };
+      createMock.mockResolvedValue(created);
+
+      const result = await service.create({ vin: VALID_VIN });
+
+      expect(createMock).toHaveBeenCalledWith({ data: { vin: VALID_VIN } });
+      expect(result).toBe(created);
+    });
+
+    it('lanza ConflictException si el VIN ya existe', async () => {
+      createMock.mockRejectedValue(
+        knownError(PrismaErrorCode.UNIQUE_VIOLATION),
+      );
+
+      await expect(service.create({ vin: VALID_VIN })).rejects.toThrow(
+        ConflictException,
+      );
+    });
   });
 
-  it('lanza NotFoundException si el vehículo no existe', async () => {
-    (prisma.vehicle.findUnique as jest.Mock).mockResolvedValue(null);
+  describe('findOne', () => {
+    it('lanza BadRequestException si el VIN tiene formato inválido', async () => {
+      await expect(service.findOne(INVALID_VIN)).rejects.toThrow(
+        BadRequestException,
+      );
+    });
 
-    await expect(
-      service.getHistory(WORKSHOP_ID, VALID_VIN),
-    ).rejects.toThrow(NotFoundException);
+    it('lanza NotFoundException si el vehículo no existe', async () => {
+      findUniqueMock.mockResolvedValue(null);
+
+      await expect(service.findOne(VALID_VIN)).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('normaliza el VIN (mayúsculas/espacios) antes de buscar', async () => {
+      const vehicle = { id: VEHICLE_ID, vin: VALID_VIN };
+      findUniqueMock.mockResolvedValue(vehicle);
+
+      const result = await service.findOne(`  ${VALID_VIN.toLowerCase()}  `);
+
+      expect(findUniqueMock).toHaveBeenCalledWith({
+        where: { vin: VALID_VIN },
+      });
+      expect(result).toBe(vehicle);
+    });
   });
 
-  it('devuelve órdenes del taller ordenadas cronológicamente', async () => {
-    const orders = [
-      { id: 'o-1', serviceDate: new Date('2024-01-10'), items: [] },
-      { id: 'o-2', serviceDate: new Date('2024-03-05'), items: [] },
-    ];
-    const findManyMock = jest.fn().mockResolvedValue(orders);
-
-    (prisma.vehicle.findUnique as jest.Mock).mockResolvedValue({
-      id: VEHICLE_ID,
-      vin: VALID_VIN,
-    });
-    (scopeService.for as jest.Mock).mockReturnValue({
-      workOrder: { findMany: findManyMock },
+  describe('update', () => {
+    it('lanza BadRequestException si el VIN tiene formato inválido', async () => {
+      await expect(
+        service.update(INVALID_VIN, { mileage: 1000 }),
+      ).rejects.toThrow(BadRequestException);
     });
 
-    const result = await service.getHistory(WORKSHOP_ID, VALID_VIN);
+    it('actualiza el vehículo por VIN normalizado', async () => {
+      const updated = { id: VEHICLE_ID, vin: VALID_VIN, mileage: 1000 };
+      updateMock.mockResolvedValue(updated);
 
-    expect(findManyMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: { vehicleId: VEHICLE_ID },
-        orderBy: [{ serviceDate: 'asc' }, { createdAt: 'asc' }],
-        include: { items: true },
-      }),
-    );
-    expect(result).toBe(orders);
+      const result = await service.update(VALID_VIN.toLowerCase(), {
+        mileage: 1000,
+      });
+
+      expect(updateMock).toHaveBeenCalledWith({
+        where: { vin: VALID_VIN },
+        data: { mileage: 1000 },
+      });
+      expect(result).toBe(updated);
+    });
+
+    it('lanza NotFoundException si el vehículo no existe', async () => {
+      updateMock.mockRejectedValue(knownError(PrismaErrorCode.NOT_FOUND));
+
+      await expect(
+        service.update(VALID_VIN, { plate: 'ABC-123' }),
+      ).rejects.toThrow(NotFoundException);
+    });
   });
 
-  it('devuelve arreglo vacío si el vehículo existe pero no tiene órdenes en el taller', async () => {
-    (prisma.vehicle.findUnique as jest.Mock).mockResolvedValue({
-      id: VEHICLE_ID,
-      vin: VALID_VIN,
-    });
-    (scopeService.for as jest.Mock).mockReturnValue({
-      workOrder: { findMany: jest.fn().mockResolvedValue([]) },
+  describe('getHistory', () => {
+    it('lanza BadRequestException si el VIN tiene formato inválido', async () => {
+      await expect(
+        service.getHistory(WORKSHOP_ID, INVALID_VIN),
+      ).rejects.toThrow(BadRequestException);
     });
 
-    const result = await service.getHistory(WORKSHOP_ID, VALID_VIN);
+    it('lanza NotFoundException si el vehículo no existe', async () => {
+      findUniqueMock.mockResolvedValue(null);
 
-    expect(result).toEqual([]);
+      await expect(service.getHistory(WORKSHOP_ID, VALID_VIN)).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('devuelve órdenes del taller ordenadas cronológicamente', async () => {
+      const orders = [
+        { id: 'o-1', serviceDate: new Date('2024-01-10'), items: [] },
+        { id: 'o-2', serviceDate: new Date('2024-03-05'), items: [] },
+      ];
+      const findManyMock = jest.fn().mockResolvedValue(orders);
+
+      findUniqueMock.mockResolvedValue({ id: VEHICLE_ID, vin: VALID_VIN });
+      forMock.mockReturnValue({ workOrder: { findMany: findManyMock } });
+
+      const result = await service.getHistory(WORKSHOP_ID, VALID_VIN);
+
+      expect(findManyMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { vehicleId: VEHICLE_ID },
+          orderBy: [{ serviceDate: 'asc' }, { createdAt: 'asc' }],
+          include: { items: true },
+        }),
+      );
+      expect(result).toBe(orders);
+    });
+
+    it('devuelve arreglo vacío si el vehículo existe pero no tiene órdenes en el taller', async () => {
+      findUniqueMock.mockResolvedValue({ id: VEHICLE_ID, vin: VALID_VIN });
+      forMock.mockReturnValue({
+        workOrder: { findMany: jest.fn().mockResolvedValue([]) },
+      });
+
+      const result = await service.getHistory(WORKSHOP_ID, VALID_VIN);
+
+      expect(result).toEqual([]);
+    });
   });
 });

@@ -1,0 +1,409 @@
+{
+  "info": {
+    "name": "Car Check API",
+    "description": "Colección de pruebas para el backend de Car Check (NestJS).\n\nFlujo sugerido:\n1. Auth > Register (o Login) — guarda automáticamente {{accessToken}}.\n2. Customers > Create — guarda {{customerId}}.\n3. Vehicles > Create — guarda {{vehicleVin}}.\n4. Work Orders > Create — guarda {{workOrderId}}.\n5. Media / receipt / status, etc.\n\nLos scripts de cada request guardan los IDs en variables de colección, así no hay que copiar/pegar nada.\n\nBase URL por defecto: http://localhost:3000 (según .env local; el CLAUDE.md menciona 3001 — ajustar {{baseUrl}} si hace falta).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3001" },
+    { "key": "accessToken", "value": "" },
+    { "key": "customerId", "value": "" },
+    { "key": "vehicleVin", "value": "" },
+    { "key": "workOrderId", "value": "" },
+    { "key": "mediaKey", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register (taller + admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', () => pm.response.code === 201);",
+                  "const body = pm.response.json();",
+                  "if (body.accessToken) {",
+                  "  pm.collectionVariables.set('accessToken', body.accessToken);",
+                  "  console.log('accessToken guardado');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"workshopName\": \"Taller Demo\",\n  \"workshopEmail\": \"taller@demo.com\",\n  \"workshopPhone\": \"5551234567\",\n  \"adminName\": \"Admin Demo\",\n  \"adminEmail\": \"admin@demo.com\",\n  \"adminPassword\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "Crea un taller con su usuario admin y devuelve { accessToken }."
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.code === 200);",
+                  "const body = pm.response.json();",
+                  "if (body.accessToken) {",
+                  "  pm.collectionVariables.set('accessToken', body.accessToken);",
+                  "  console.log('accessToken guardado');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@tallercheck.sv\",\n  \"password\": \"admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Autentica con email/contraseña del usuario y devuelve { accessToken }."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Customers",
+      "item": [
+        {
+          "name": "List customers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/customers",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers"]
+            },
+            "description": "Lista los clientes del taller autenticado (ordenados por nombre)."
+          }
+        },
+        {
+          "name": "Create customer",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', () => pm.response.code === 201);",
+                  "const body = pm.response.json();",
+                  "if (body.id) {",
+                  "  pm.collectionVariables.set('customerId', body.id);",
+                  "  console.log('customerId guardado:', body.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Juan Pérez\",\n  \"phone\": \"5559876543\",\n  \"email\": \"juan@cliente.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/customers",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers"]
+            },
+            "description": "Crea un cliente. name (min 2), phone (min 7), email opcional."
+          }
+        },
+        {
+          "name": "Get customer by id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/customers/{{customerId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers", "{{customerId}}"]
+            },
+            "description": "Obtiene un cliente del taller por id. 404 si no existe / no es del taller."
+          }
+        },
+        {
+          "name": "Update customer",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"5550000000\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/customers/{{customerId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers", "{{customerId}}"]
+            },
+            "description": "Actualiza campos del cliente (todos opcionales)."
+          }
+        },
+        {
+          "name": "Delete customer",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/customers/{{customerId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers", "{{customerId}}"]
+            },
+            "description": "Elimina un cliente del taller. Responde 204 No Content."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Vehicles",
+      "item": [
+        {
+          "name": "Create vehicle (CAR-14)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', () => pm.response.code === 201);",
+                  "const body = pm.response.json();",
+                  "if (body.vin) {",
+                  "  pm.collectionVariables.set('vehicleVin', body.vin);",
+                  "  console.log('vehicleVin guardado:', body.vin);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vin\": \"WBA3A5G59DNP26082\",\n  \"plate\": \"ABC-123\",\n  \"make\": \"BMW\",\n  \"model\": \"328i\",\n  \"year\": 2013,\n  \"mileage\": 85000\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/vehicles",
+              "host": ["{{baseUrl}}"],
+              "path": ["vehicles"]
+            },
+            "description": "Alta de vehículo (entidad global). El VIN se normaliza a mayúsculas y se valida (17 chars, sin I/O/Q). 409 si el VIN ya existe."
+          }
+        },
+        {
+          "name": "Get vehicle by VIN (CAR-14)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/vehicles/{{vehicleVin}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["vehicles", "{{vehicleVin}}"]
+            },
+            "description": "Obtiene un vehículo por VIN. 400 si el VIN es inválido, 404 si no existe."
+          }
+        },
+        {
+          "name": "Update vehicle (CAR-14)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"plate\": \"XYZ-789\",\n  \"mileage\": 92000\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/vehicles/{{vehicleVin}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["vehicles", "{{vehicleVin}}"]
+            },
+            "description": "Edición de vehículo por VIN. El VIN NO es editable (clave del historial). 404 si no existe."
+          }
+        },
+        {
+          "name": "Get vehicle history (CAR-26)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/vehicles/{{vehicleVin}}/history",
+              "host": ["{{baseUrl}}"],
+              "path": ["vehicles", "{{vehicleVin}}", "history"]
+            },
+            "description": "Historial cronológico de órdenes del taller para ese VIN."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Work Orders",
+      "item": [
+        {
+          "name": "Create work order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', () => pm.response.code === 201);",
+                  "const body = pm.response.json();",
+                  "if (body.id) {",
+                  "  pm.collectionVariables.set('workOrderId', body.id);",
+                  "  console.log('workOrderId guardado:', body.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vin\": \"{{vehicleVin}}\",\n  \"plate\": \"ABC-123\",\n  \"make\": \"BMW\",\n  \"model\": \"328i\",\n  \"year\": 2013,\n  \"customerId\": \"{{customerId}}\",\n  \"mileage\": 86000,\n  \"notes\": \"Cambio de aceite y revisión de frenos\",\n  \"items\": [\n    {\n      \"type\": \"SERVICIO\",\n      \"description\": \"Cambio de aceite\",\n      \"quantity\": 1,\n      \"unitPrice\": 500\n    },\n    {\n      \"type\": \"REPUESTO\",\n      \"description\": \"Filtro de aceite\",\n      \"quantity\": 1,\n      \"unitPrice\": 150\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/work-orders",
+              "host": ["{{baseUrl}}"],
+              "path": ["work-orders"]
+            },
+            "description": "Crea una orden. Hace find-or-create del vehículo por VIN. Requiere customerId del taller y al menos 1 item. El costo total se calcula desde los items."
+          }
+        },
+        {
+          "name": "Update work order",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notes\": \"Se agregó alineación\",\n  \"items\": [\n    {\n      \"type\": \"SERVICIO\",\n      \"description\": \"Alineación y balanceo\",\n      \"quantity\": 1,\n      \"unitPrice\": 800\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/work-orders/{{workOrderId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["work-orders", "{{workOrderId}}"]
+            },
+            "description": "Edita la orden. Si se envían items, reemplaza los existentes y recalcula el costo total."
+          }
+        },
+        {
+          "name": "Advance status",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"EN_PROCESO\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/work-orders/{{workOrderId}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["work-orders", "{{workOrderId}}", "status"]
+            },
+            "description": "Avanza el estado de la orden. Transiciones válidas: RECIBIDO → EN_PROCESO → LISTO → ENTREGADO. 400 si la transición es inválida."
+          }
+        },
+        {
+          "name": "Get receipt PDF",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/work-orders/{{workOrderId}}/receipt.pdf",
+              "host": ["{{baseUrl}}"],
+              "path": ["work-orders", "{{workOrderId}}", "receipt.pdf"]
+            },
+            "description": "Descarga el comprobante PDF de la orden (Send and Download para guardarlo)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Media",
+      "item": [
+        {
+          "name": "Create upload URL",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.code === 200);",
+                  "const body = pm.response.json();",
+                  "if (body.key) {",
+                  "  pm.collectionVariables.set('mediaKey', body.key);",
+                  "  console.log('mediaKey guardado:', body.key);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contentType\": \"image/jpeg\",\n  \"sizeBytes\": 1048576\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/work-orders/{{workOrderId}}/media/upload-url",
+              "host": ["{{baseUrl}}"],
+              "path": ["work-orders", "{{workOrderId}}", "media", "upload-url"]
+            },
+            "description": "Genera una URL prefirmada de S3 para subir un archivo. contentType permitido: image/jpeg|png|webp|heic|heif, video/mp4|quicktime|webm."
+          }
+        },
+        {
+          "name": "Confirm upload",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"key\": \"{{mediaKey}}\",\n  \"contentType\": \"image/jpeg\",\n  \"sizeBytes\": 1048576\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/work-orders/{{workOrderId}}/media/confirm",
+              "host": ["{{baseUrl}}"],
+              "path": ["work-orders", "{{workOrderId}}", "media", "confirm"]
+            },
+            "description": "Confirma la subida y registra el MediaAsset en BD usando la key devuelta por upload-url."
+          }
+        }
+      ]
+    }
+  ]
+}

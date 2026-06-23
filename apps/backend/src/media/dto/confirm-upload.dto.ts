@@ -1,4 +1,12 @@
-import { IsIn, IsInt, IsNotEmpty, IsOptional, IsString, Max, Min } from 'class-validator';
+import {
+  IsIn,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Max,
+  Min,
+} from 'class-validator';
 import { ALLOWED_CONTENT_TYPES, MAX_BYTES } from '../media.constants';
 
 export class ConfirmUploadDto {
