@@ -11,15 +11,12 @@ async function logout() {
 
 const navLinks = [
   { href: '/vehiculos', label: 'Vehículos' },
+  { href: '/historial', label: 'Historial' },
   { href: '/clientes', label: 'Clientes' },
   { href: '/ordenes', label: 'Órdenes' },
 ];
 
-export default function AppLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen flex">
       {/* Sidebar */}
@@ -53,9 +50,7 @@ export default function AppLayout({
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 bg-gray-50 overflow-auto">
-        {children}
-      </main>
+      <main className="flex-1 bg-gray-50 overflow-auto">{children}</main>
     </div>
   );
 }
