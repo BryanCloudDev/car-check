@@ -8,6 +8,7 @@ import { Prisma } from '../../generated/prisma/client';
 import { PrismaErrorCode } from '../common/constants';
 import { PrismaService } from '../prisma/prisma.service';
 import { WorkshopScopeService } from '../common/workshop-scope/workshop-scope.service';
+import { VehiclesService } from '../vehicles/vehicles.service';
 import { AdvanceStatusDto } from './dto/advance-status.dto';
 import { CreateWorkOrderDto } from './dto/create-work-order.dto';
 import { UpdateWorkOrderDto } from './dto/update-work-order.dto';
@@ -18,6 +19,7 @@ export class WorkOrdersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly scope: WorkshopScopeService,
+    private readonly vehicles: VehiclesService,
   ) {}
 
   async create(workshopId: string, dto: CreateWorkOrderDto) {
@@ -50,10 +52,13 @@ export class WorkOrdersService {
     }
 
     // Find-or-create vehicle by VIN (global entity, no workshopId)
-    const vehicle = await this.prisma.vehicle.upsert({
-      where: { vin },
-      update: {},
-      create: { vin, plate, make, model, year },
+    const vehicle = await this.vehicles.findOrCreate({
+      vin,
+      plate,
+      make,
+      model,
+      year,
+      mileage,
     });
 
     // Compute cost from items

@@ -18,7 +18,6 @@ export class VehiclesService {
     private readonly scope: WorkshopScopeService,
   ) {}
 
-
   async create(dto: CreateVehicleDto) {
     try {
       return await this.prisma.vehicle.create({ data: dto });
@@ -31,6 +30,26 @@ export class VehiclesService {
       }
       throw e;
     }
+  }
+
+  async findOrCreate(dto: CreateVehicleDto) {
+    const vin = this.normalizeVin(dto.vin);
+
+    return this.prisma.vehicle.upsert({
+      where: { vin },
+      update: {
+        plate: dto.plate ?? undefined,
+        mileage: dto.mileage ?? undefined,
+      },
+      create: {
+        vin,
+        plate: dto.plate,
+        make: dto.make,
+        model: dto.model,
+        year: dto.year,
+        mileage: dto.mileage,
+      },
+    });
   }
 
   async findOne(vin: string) {

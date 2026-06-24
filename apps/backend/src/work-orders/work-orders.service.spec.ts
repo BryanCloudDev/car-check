@@ -3,6 +3,7 @@ import { Test } from '@nestjs/testing';
 import { OrderStatus, Prisma } from '../../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { WorkshopScopeService } from '../common/workshop-scope/workshop-scope.service';
+import { VehiclesService } from '../vehicles/vehicles.service';
 import { WorkOrdersService } from './work-orders.service';
 
 const WORKSHOP_ID = 'ws-1';
@@ -43,6 +44,10 @@ describe('WorkOrdersService.advanceStatus', () => {
         {
           provide: WorkshopScopeService,
           useValue: { for: jest.fn() },
+        },
+        {
+          provide: VehiclesService,
+          useValue: { findOrCreate: jest.fn() },
         },
       ],
     }).compile();

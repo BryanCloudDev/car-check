@@ -27,12 +27,14 @@ describe('VehiclesService', () => {
   const findUniqueMock = jest.fn();
   const createMock = jest.fn();
   const updateMock = jest.fn();
+  const upsertMock = jest.fn();
   const forMock = jest.fn();
 
   beforeEach(async () => {
     findUniqueMock.mockReset();
     createMock.mockReset();
     updateMock.mockReset();
+    upsertMock.mockReset();
     forMock.mockReset();
 
     const module = await Test.createTestingModule({
@@ -45,6 +47,7 @@ describe('VehiclesService', () => {
               findUnique: findUniqueMock,
               create: createMock,
               update: updateMock,
+              upsert: upsertMock,
             },
           },
         },
@@ -77,6 +80,63 @@ describe('VehiclesService', () => {
       await expect(service.create({ vin: VALID_VIN })).rejects.toThrow(
         ConflictException,
       );
+    });
+  });
+
+  describe('findOrCreate', () => {
+    it('lanza BadRequestException si el VIN tiene formato inválido', async () => {
+      await expect(service.findOrCreate({ vin: INVALID_VIN })).rejects.toThrow(
+        BadRequestException,
+      );
+      expect(upsertMock).not.toHaveBeenCalled();
+    });
+
+    it('crea el vehículo cuando el VIN no existe (VIN normalizado)', async () => {
+      const vehicle = { id: VEHICLE_ID, vin: VALID_VIN };
+      upsertMock.mockResolvedValue(vehicle);
+
+      const result = await service.findOrCreate({
+        vin: VALID_VIN.toLowerCase(),
+        plate: 'ABC-123',
+        make: 'Honda',
+        model: 'Civic',
+        year: 2020,
+        mileage: 45000,
+      });
+
+      expect(upsertMock).toHaveBeenCalledWith({
+        where: { vin: VALID_VIN },
+        update: { plate: 'ABC-123', mileage: 45000 },
+        create: {
+          vin: VALID_VIN,
+          plate: 'ABC-123',
+          make: 'Honda',
+          model: 'Civic',
+          year: 2020,
+          mileage: 45000,
+        },
+      });
+      expect(result).toBe(vehicle);
+    });
+
+    it('reutiliza el vehículo existente y solo refresca placa y kilometraje', async () => {
+      const vehicle = { id: VEHICLE_ID, vin: VALID_VIN };
+      upsertMock.mockResolvedValue(vehicle);
+
+      await service.findOrCreate({ vin: VALID_VIN });
+
+      expect(upsertMock).toHaveBeenCalledWith({
+        where: { vin: VALID_VIN },
+        update: { plate: undefined, mileage: undefined },
+        create: {
+          vin: VALID_VIN,
+          plate: undefined,
+          make: undefined,
+          model: undefined,
+          year: undefined,
+          mileage: undefined,
+        },
+      });
     });
   });
 
