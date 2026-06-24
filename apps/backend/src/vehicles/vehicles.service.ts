@@ -52,6 +52,27 @@ export class VehiclesService {
     });
   }
 
+  async search(query?: string) {
+    const term = query?.trim();
+
+    if (!term) {
+      return this.prisma.vehicle.findMany({ orderBy: { createdAt: 'desc' } });
+    }
+
+    const upper = term.toUpperCase();
+    if (VIN_REGEX.test(upper)) {
+      const byVin = await this.prisma.vehicle.findUnique({
+        where: { vin: upper },
+      });
+      return byVin ? [byVin] : [];
+    }
+
+    return this.prisma.vehicle.findMany({
+      where: { plate: { equals: term, mode: 'insensitive' } },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   async findOne(vin: string) {
     const normalized = this.normalizeVin(vin);
 

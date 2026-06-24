@@ -25,6 +25,7 @@ function knownError(code: string) {
 describe('VehiclesService', () => {
   let service: VehiclesService;
   const findUniqueMock = jest.fn();
+  const findManyMock = jest.fn();
   const createMock = jest.fn();
   const updateMock = jest.fn();
   const upsertMock = jest.fn();
@@ -32,6 +33,7 @@ describe('VehiclesService', () => {
 
   beforeEach(async () => {
     findUniqueMock.mockReset();
+    findManyMock.mockReset();
     createMock.mockReset();
     updateMock.mockReset();
     upsertMock.mockReset();
@@ -45,6 +47,7 @@ describe('VehiclesService', () => {
           useValue: {
             vehicle: {
               findUnique: findUniqueMock,
+              findMany: findManyMock,
               create: createMock,
               update: updateMock,
               upsert: upsertMock,
@@ -80,6 +83,55 @@ describe('VehiclesService', () => {
       await expect(service.create({ vin: VALID_VIN })).rejects.toThrow(
         ConflictException,
       );
+    });
+  });
+
+  describe('search', () => {
+    it('lista todos los vehículos cuando no hay término', async () => {
+      const vehicles = [{ id: VEHICLE_ID, vin: VALID_VIN }];
+      findManyMock.mockResolvedValue(vehicles);
+
+      const result = await service.search('   ');
+
+      expect(findManyMock).toHaveBeenCalledWith({
+        orderBy: { createdAt: 'desc' },
+      });
+      expect(result).toBe(vehicles);
+    });
+
+    it('busca por VIN exacto (normalizado) cuando el término tiene forma de VIN', async () => {
+      const vehicle = { id: VEHICLE_ID, vin: VALID_VIN };
+      findUniqueMock.mockResolvedValue(vehicle);
+
+      const result = await service.search(`  ${VALID_VIN.toLowerCase()}  `);
+
+      expect(findUniqueMock).toHaveBeenCalledWith({
+        where: { vin: VALID_VIN },
+      });
+      expect(result).toEqual([vehicle]);
+      expect(findManyMock).not.toHaveBeenCalled();
+    });
+
+    it('devuelve arreglo vacío si el VIN no existe', async () => {
+      findUniqueMock.mockResolvedValue(null);
+
+      const result = await service.search(VALID_VIN);
+
+      expect(result).toEqual([]);
+    });
+
+    it('busca por placa (sin distinción de mayúsculas) cuando no es un VIN', async () => {
+      const vehicles = [{ id: VEHICLE_ID, vin: VALID_VIN, plate: 'ABC-123' }];
+      findManyMock.mockResolvedValue(vehicles);
+
+      const result = await service.search('abc-123');
+
+      expect(findManyMock).toHaveBeenCalledWith({
+        where: { plate: { equals: 'abc-123', mode: 'insensitive' } },
+        orderBy: { createdAt: 'desc' },
+      });
+      expect(result).toBe(vehicles);
+      expect(findUniqueMock).not.toHaveBeenCalled();
     });
   });
 

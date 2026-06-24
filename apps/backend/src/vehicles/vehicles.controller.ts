@@ -7,18 +7,21 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
   ApiParam,
+  ApiQuery,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentWorkshop } from '../auth/decorators/current-workshop.decorator';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
+import { SearchVehiclesDto } from './dto/search-vehicles.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
 import { VehiclesService } from './vehicles.service';
 
@@ -48,6 +51,24 @@ export class VehiclesController {
   @ApiResponse({ status: 409, description: 'El VIN ya está registrado.' })
   create(@Body() dto: CreateVehicleDto) {
     return this.vehiclesService.create(dto);
+  }
+
+  @Get()
+  @ApiOperation({
+    summary: 'Listar o buscar vehículos por VIN o placa',
+    description:
+      'Sin parámetros devuelve todos los vehículos. Con `q` busca por VIN ' +
+      'exacto (principal) o por placa (secundaria).',
+  })
+  @ApiQuery({
+    name: 'q',
+    required: false,
+    description: 'VIN exacto (principal) o placa (secundaria).',
+    example: '1HGCM82633A004352',
+  })
+  @ApiResponse({ status: 200, description: 'Lista de vehículos encontrados.' })
+  search(@Query() dto: SearchVehiclesDto) {
+    return this.vehiclesService.search(dto.q);
   }
 
   @Get(':vin')

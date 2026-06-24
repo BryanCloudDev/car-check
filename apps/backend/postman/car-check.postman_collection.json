@@ -188,6 +188,26 @@
       "name": "Vehicles",
       "item": [
         {
+          "name": "Search vehicles by VIN or plate (CAR-16)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/vehicles?q=ABC-123",
+              "host": ["{{baseUrl}}"],
+              "path": ["vehicles"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "ABC-123",
+                  "description": "VIN exacto (principal) o placa (secundaria). Sin q, lista todos."
+                }
+              ]
+            },
+            "description": "Lista o busca vehículos. Con q busca por VIN exacto (normalizado a mayúsculas) o por placa (insensible a mayúsculas). Sin q devuelve todos. Siempre responde un arreglo."
+          }
+        },
+        {
           "name": "Create vehicle (CAR-14)",
           "event": [
             {
