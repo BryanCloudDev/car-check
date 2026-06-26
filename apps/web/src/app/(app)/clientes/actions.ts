@@ -58,7 +58,9 @@ export async function createCustomerAction(
   } catch (err) {
     if (err instanceof ApiError && err.status === 400) {
       return {
-        error: 'Datos inválidos. Revisá los campos e intentá de nuevo.',
+        error:
+          err.firstMessage ??
+          'Datos inválidos. Revisá los campos e intentá de nuevo.',
       };
     }
     return { error: 'No se pudo registrar el cliente. Intentá de nuevo.' };
@@ -91,7 +93,9 @@ export async function updateCustomerAction(
     }
     if (err instanceof ApiError && err.status === 400) {
       return {
-        error: 'Datos inválidos. Revisá los campos e intentá de nuevo.',
+        error:
+          err.firstMessage ??
+          'Datos inválidos. Revisá los campos e intentá de nuevo.',
       };
     }
     return { error: 'No se pudo actualizar el cliente. Intentá de nuevo.' };

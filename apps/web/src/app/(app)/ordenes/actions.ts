@@ -166,7 +166,9 @@ export async function createOrderAction(
     }
     if (err instanceof ApiError && err.status === 400) {
       return {
-        error: 'Datos inválidos. Revisá los campos e intentá de nuevo.',
+        error:
+          err.firstMessage ??
+          'Datos inválidos. Revisá los campos e intentá de nuevo.',
       };
     }
     return { error: 'No se pudo crear la orden. Intentá de nuevo.' };
@@ -200,7 +202,9 @@ export async function updateOrderAction(
     }
     if (err instanceof ApiError && err.status === 400) {
       return {
-        error: 'Datos inválidos. Revisá los campos e intentá de nuevo.',
+        error:
+          err.firstMessage ??
+          'Datos inválidos. Revisá los campos e intentá de nuevo.',
       };
     }
     return { error: 'No se pudo actualizar la orden. Intentá de nuevo.' };

@@ -26,7 +26,9 @@ export default function LoginPage() {
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        setError((data as { message?: string }).message ?? 'Credenciales incorrectas');
+        const message = (data as { message?: string | string[] }).message;
+        const text = Array.isArray(message) ? message[0] : message;
+        setError(text ?? 'Credenciales incorrectas');
         return;
       }
 

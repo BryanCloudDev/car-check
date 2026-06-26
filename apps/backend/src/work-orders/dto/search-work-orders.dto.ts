@@ -9,7 +9,7 @@ export class SearchWorkOrdersDto {
     enum: OrderStatus,
     example: OrderStatus.EN_PROCESO,
   })
-  @IsEnum(OrderStatus)
+  @IsEnum(OrderStatus, { message: 'El estado de la orden no es válido' })
   @IsOptional()
   status?: OrderStatus;
 }

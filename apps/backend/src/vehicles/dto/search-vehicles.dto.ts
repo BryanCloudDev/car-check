@@ -8,7 +8,7 @@ export class SearchVehiclesDto {
       'Si se omite, devuelve todos los vehículos.',
     example: '1HGCM82633A004352',
   })
-  @IsString()
+  @IsString({ message: 'El término de búsqueda debe ser texto' })
   @IsOptional()
   q?: string;
 }

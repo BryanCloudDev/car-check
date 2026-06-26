@@ -16,8 +16,8 @@ export class ConfirmUploadDto {
       'Clave (path) del objeto en S3, obtenida al solicitar la URL pre-firmada',
     example: 'work-orders/abc123/media/foto.jpg',
   })
-  @IsString()
-  @IsNotEmpty()
+  @IsString({ message: 'La clave del archivo debe ser texto' })
+  @IsNotEmpty({ message: 'La clave del archivo es obligatoria' })
   key: string;
 
   @ApiProperty({
@@ -25,7 +25,9 @@ export class ConfirmUploadDto {
     enum: ALLOWED_CONTENT_TYPES,
     example: 'image/jpeg',
   })
-  @IsIn(ALLOWED_CONTENT_TYPES)
+  @IsIn(ALLOWED_CONTENT_TYPES, {
+    message: 'El tipo de archivo no está permitido',
+  })
   contentType: string;
 
   @ApiPropertyOptional({
@@ -33,8 +35,10 @@ export class ConfirmUploadDto {
     example: 204800,
   })
   @IsOptional()
-  @IsInt()
-  @Min(1)
-  @Max(MAX_BYTES.VIDEO)
+  @IsInt({ message: 'El tamaño del archivo debe ser un número entero' })
+  @Min(1, { message: 'El tamaño del archivo debe ser mayor a 0' })
+  @Max(MAX_BYTES.VIDEO, {
+    message: 'El archivo supera el tamaño máximo permitido',
+  })
   sizeBytes?: number;
 }

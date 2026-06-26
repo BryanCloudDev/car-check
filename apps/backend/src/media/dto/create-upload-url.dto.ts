@@ -8,7 +8,9 @@ export class CreateUploadUrlDto {
     enum: ALLOWED_CONTENT_TYPES,
     example: 'image/jpeg',
   })
-  @IsIn(ALLOWED_CONTENT_TYPES)
+  @IsIn(ALLOWED_CONTENT_TYPES, {
+    message: 'El tipo de archivo no está permitido',
+  })
   contentType: string;
 
   @ApiPropertyOptional({
@@ -17,8 +19,10 @@ export class CreateUploadUrlDto {
     example: 204800,
   })
   @IsOptional()
-  @IsInt()
-  @Min(1)
-  @Max(MAX_BYTES.VIDEO)
+  @IsInt({ message: 'El tamaño del archivo debe ser un número entero' })
+  @Min(1, { message: 'El tamaño del archivo debe ser mayor a 0' })
+  @Max(MAX_BYTES.VIDEO, {
+    message: 'El archivo supera el tamaño máximo permitido',
+  })
   sizeBytes?: number;
 }

@@ -32,12 +32,12 @@ export class CreateWorkOrderDto {
     description: 'Placa del vehículo',
     example: 'ABC-123',
   })
-  @IsString()
+  @IsString({ message: 'La placa debe ser texto' })
   @IsOptional()
   plate?: string;
 
   @ApiPropertyOptional({ description: 'Marca del vehículo', example: 'Toyota' })
-  @IsString()
+  @IsString({ message: 'La marca debe ser texto' })
   @IsOptional()
   make?: string;
 
@@ -45,15 +45,17 @@ export class CreateWorkOrderDto {
     description: 'Modelo del vehículo',
     example: 'Corolla',
   })
-  @IsString()
+  @IsString({ message: 'El modelo debe ser texto' })
   @IsOptional()
   model?: string;
 
   @ApiPropertyOptional({ description: 'Año del vehículo', example: 2019 })
   @Type(() => Number)
-  @IsInt()
-  @Min(1885)
-  @Max(new Date().getFullYear() + 1)
+  @IsInt({ message: 'El año debe ser un número entero' })
+  @Min(1885, { message: 'El año debe ser 1885 o posterior' })
+  @Max(new Date().getFullYear() + 1, {
+    message: 'El año no puede ser mayor a $constraint1',
+  })
   @IsOptional()
   year?: number;
 
@@ -61,7 +63,7 @@ export class CreateWorkOrderDto {
     description: 'ID del cliente (UUID)',
     example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
   })
-  @IsString()
+  @IsString({ message: 'Seleccioná un cliente' })
   customerId: string;
 
   @ApiPropertyOptional({
@@ -69,8 +71,8 @@ export class CreateWorkOrderDto {
     example: 62000,
   })
   @Type(() => Number)
-  @IsInt()
-  @Min(0)
+  @IsInt({ message: 'El kilometraje debe ser un número entero' })
+  @Min(0, { message: 'El kilometraje no puede ser negativo' })
   @IsOptional()
   mileage?: number;
 
@@ -78,7 +80,7 @@ export class CreateWorkOrderDto {
     description: 'Notas u observaciones de la orden',
     example: 'Cliente menciona ruido al frenar.',
   })
-  @IsString()
+  @IsString({ message: 'Las notas deben ser texto' })
   @IsOptional()
   notes?: string;
 
@@ -86,7 +88,10 @@ export class CreateWorkOrderDto {
     description: 'Fecha de servicio (ISO 8601)',
     example: '2026-06-23',
   })
-  @IsDateString()
+  @IsDateString(
+    {},
+    { message: 'La fecha de servicio debe tener un formato válido' },
+  )
   @IsOptional()
   serviceDate?: string;
 
@@ -94,8 +99,8 @@ export class CreateWorkOrderDto {
     description: 'Ítems de la orden (servicios y/o repuestos). Mínimo 1.',
     type: [CreateOrderItemDto],
   })
-  @IsArray()
-  @ArrayMinSize(1)
+  @IsArray({ message: 'Los ítems deben ser una lista' })
+  @ArrayMinSize(1, { message: 'Agregá al menos un ítem a la orden' })
   @ValidateNested({ each: true })
   @Type(() => CreateOrderItemDto)
   items: CreateOrderItemDto[];

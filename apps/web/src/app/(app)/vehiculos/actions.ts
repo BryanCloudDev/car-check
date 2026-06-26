@@ -77,7 +77,9 @@ export async function createVehicleAction(
     }
     if (err instanceof ApiError && err.status === 400) {
       return {
-        error: 'Datos inválidos. Revisá los campos e intentá de nuevo.',
+        error:
+          err.firstMessage ??
+          'Datos inválidos. Revisá los campos e intentá de nuevo.',
       };
     }
     return { error: 'No se pudo registrar el vehículo. Intentá de nuevo.' };
@@ -105,6 +107,13 @@ export async function updateVehicleAction(
   } catch (err) {
     if (err instanceof ApiError && err.status === 404) {
       return { error: 'El vehículo ya no existe.' };
+    }
+    if (err instanceof ApiError && err.status === 400) {
+      return {
+        error:
+          err.firstMessage ??
+          'Datos inválidos. Revisá los campos e intentá de nuevo.',
+      };
     }
     return { error: 'No se pudo actualizar el vehículo. Intentá de nuevo.' };
   }

@@ -17,15 +17,17 @@ export class CreateOrderItemDto {
     enum: OrderItemType,
     example: OrderItemType.SERVICIO,
   })
-  @IsEnum(OrderItemType)
+  @IsEnum(OrderItemType, {
+    message: 'El tipo de ítem debe ser SERVICIO o REPUESTO',
+  })
   type: OrderItemType;
 
   @ApiProperty({
     description: 'Descripción del servicio o repuesto',
     example: 'Cambio de aceite 5W-30',
   })
-  @IsString()
-  @MinLength(1)
+  @IsString({ message: 'La descripción debe ser texto' })
+  @MinLength(1, { message: 'Cada ítem necesita una descripción' })
   description: string;
 
   @ApiPropertyOptional({
@@ -34,8 +36,8 @@ export class CreateOrderItemDto {
     minimum: 1,
   })
   @Type(() => Number)
-  @IsInt()
-  @Min(1)
+  @IsInt({ message: 'La cantidad debe ser un número entero' })
+  @Min(1, { message: 'La cantidad debe ser 1 o más' })
   @IsOptional()
   quantity?: number;
 
@@ -45,8 +47,8 @@ export class CreateOrderItemDto {
     minimum: 0,
   })
   @Type(() => Number)
-  @IsNumber()
-  @Min(0)
+  @IsNumber({}, { message: 'El precio unitario debe ser un número' })
+  @Min(0, { message: 'El precio unitario no puede ser negativo' })
   @IsOptional()
   unitPrice?: number;
 }

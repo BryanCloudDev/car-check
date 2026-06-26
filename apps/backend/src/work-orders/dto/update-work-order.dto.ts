@@ -18,8 +18,8 @@ export class UpdateWorkOrderDto {
     example: 63000,
   })
   @Type(() => Number)
-  @IsInt()
-  @Min(0)
+  @IsInt({ message: 'El kilometraje debe ser un número entero' })
+  @Min(0, { message: 'El kilometraje no puede ser negativo' })
   @IsOptional()
   mileage?: number;
 
@@ -27,7 +27,7 @@ export class UpdateWorkOrderDto {
     description: 'Notas u observaciones',
     example: 'Se detectó fuga de aceite adicional.',
   })
-  @IsString()
+  @IsString({ message: 'Las notas deben ser texto' })
   @IsOptional()
   notes?: string;
 
@@ -35,7 +35,10 @@ export class UpdateWorkOrderDto {
     description: 'Fecha de servicio (ISO 8601)',
     example: '2026-06-24',
   })
-  @IsDateString()
+  @IsDateString(
+    {},
+    { message: 'La fecha de servicio debe tener un formato válido' },
+  )
   @IsOptional()
   serviceDate?: string;
 
@@ -43,8 +46,8 @@ export class UpdateWorkOrderDto {
     description: 'Reemplazo completo de los ítems de la orden.',
     type: [CreateOrderItemDto],
   })
-  @IsArray()
-  @ArrayMinSize(1)
+  @IsArray({ message: 'Los ítems deben ser una lista' })
+  @ArrayMinSize(1, { message: 'Agregá al menos un ítem a la orden' })
   @ValidateNested({ each: true })
   @Type(() => CreateOrderItemDto)
   @IsOptional()

@@ -8,6 +8,6 @@ export class AdvanceStatusDto {
     enum: OrderStatus,
     example: OrderStatus.EN_PROCESO,
   })
-  @IsEnum(OrderStatus)
+  @IsEnum(OrderStatus, { message: 'El estado de la orden no es válido' })
   status: OrderStatus;
 }
