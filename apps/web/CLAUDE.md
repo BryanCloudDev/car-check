@@ -13,7 +13,7 @@ src/app/
   (app)/clientes/page.tsx
   (app)/ordenes/page.tsx
   api/auth/login/route.ts        POST → backend /auth/login → setea cookie 'session'
-  api/auth/logout/route.ts       POST → borra cookie 'session'
+src/components/SidebarNav.tsx    Nav del sidebar (client) — resalta el link activo
 src/lib/api.ts                   apiFetch<T>() — helper para llamadas al backend
 src/middleware.ts                Protege rutas autenticadas
 ```
