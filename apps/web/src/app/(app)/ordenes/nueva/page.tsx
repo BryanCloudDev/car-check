@@ -15,7 +15,7 @@ export default async function NuevaOrdenPage() {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       <Link
         href="/ordenes"
         className="text-sm text-gray-500 transition-colors hover:text-gray-900"

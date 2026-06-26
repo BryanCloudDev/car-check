@@ -21,8 +21,8 @@ export default async function VehiculosPage({
   }
 
   return (
-    <div className="p-8">
-      <div className="mb-6 flex items-center justify-between gap-4">
+    <div className="p-4 sm:p-6 lg:p-8">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-2xl font-bold text-gray-900">Vehículos</h1>
         <Link
           href="/vehiculos/nuevo"
@@ -85,8 +85,8 @@ export default async function VehiculosPage({
       )}
 
       {vehicles.length > 0 && (
-        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
-          <table className="w-full text-sm">
+        <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
+          <table className="w-full min-w-[48rem] text-sm">
             <thead className="bg-gray-50 text-gray-600 uppercase text-xs tracking-wide">
               <tr>
                 <th className="px-4 py-3 text-left">VIN</th>

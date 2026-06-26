@@ -27,7 +27,7 @@ export default async function EditarOrdenPage({
   const action = updateOrderAction.bind(null, id);
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       <Link
         href={`/ordenes/${id}`}
         className="text-sm text-gray-500 transition-colors hover:text-gray-900"

@@ -72,7 +72,7 @@ export default async function HistorialPage({
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       <h1 className="text-2xl font-bold text-gray-900 mb-6">
         Historial por VIN
       </h1>
@@ -209,8 +209,8 @@ export default async function HistorialPage({
                   )}
 
                   {order.items.length > 0 && (
-                    <div className="mt-4 overflow-hidden rounded-lg border border-gray-100">
-                      <table className="w-full text-sm">
+                    <div className="mt-4 overflow-x-auto rounded-lg border border-gray-100">
+                      <table className="w-full min-w-[32rem] text-sm">
                         <thead className="bg-gray-50 text-gray-500 uppercase text-xs tracking-wide">
                           <tr>
                             <th className="px-3 py-2 text-left">Descripción</th>

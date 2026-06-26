@@ -53,7 +53,7 @@ export default async function OrdenDetallePage({
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       <Link
         href="/ordenes"
         className="text-sm text-gray-500 transition-colors hover:text-gray-900"
@@ -161,8 +161,8 @@ export default async function OrdenDetallePage({
       {order.items.length === 0 ? (
         <p className="mb-6 text-sm text-gray-500">Esta orden no tiene ítems.</p>
       ) : (
-        <div className="mb-6 overflow-hidden rounded-xl border border-gray-200 bg-white">
-          <table className="w-full text-sm">
+        <div className="mb-6 overflow-x-auto rounded-xl border border-gray-200 bg-white">
+          <table className="w-full min-w-[36rem] text-sm">
             <thead className="bg-gray-50 text-gray-500 uppercase text-xs tracking-wide">
               <tr>
                 <th className="px-4 py-2 text-left">Descripción</th>

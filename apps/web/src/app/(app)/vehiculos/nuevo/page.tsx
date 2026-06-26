@@ -4,7 +4,7 @@ import { VehicleForm } from '../VehicleForm';
 
 export default function NuevoVehiculoPage() {
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       <Link
         href="/vehiculos"
         className="mb-4 inline-block text-sm text-gray-500 transition-colors hover:text-gray-900"
