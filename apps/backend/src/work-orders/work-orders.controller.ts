@@ -7,6 +7,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Res,
   StreamableFile,
   UseGuards,
@@ -17,14 +18,17 @@ import {
   ApiOperation,
   ApiParam,
   ApiProduces,
+  ApiQuery,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { OrderStatus } from '../../generated/prisma/client';
 import { CurrentWorkshop } from '../auth/decorators/current-workshop.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { WorkOrdersService } from './work-orders.service';
 import { AdvanceStatusDto } from './dto/advance-status.dto';
 import { CreateWorkOrderDto } from './dto/create-work-order.dto';
+import { SearchWorkOrdersDto } from './dto/search-work-orders.dto';
 import { UpdateWorkOrderDto } from './dto/update-work-order.dto';
 
 @ApiTags('work-orders')
@@ -53,6 +57,40 @@ export class WorkOrdersController {
     @Body() dto: CreateWorkOrderDto,
   ) {
     return this.workOrdersService.create(workshopId, dto);
+  }
+
+  @Get()
+  @ApiOperation({
+    summary: 'Listar órdenes de trabajo',
+    description:
+      'Devuelve las órdenes del taller autenticado (con ítems, vehículo y ' +
+      'cliente), ordenadas de la más reciente a la más antigua. Filtro ' +
+      'opcional por estado con `status`.',
+  })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: OrderStatus,
+    description: 'Filtrar por estado de la orden.',
+  })
+  @ApiResponse({ status: 200, description: 'Lista de órdenes de trabajo.' })
+  findAll(
+    @CurrentWorkshop() workshopId: string,
+    @Query() dto: SearchWorkOrdersDto,
+  ) {
+    return this.workOrdersService.findAll(workshopId, dto.status);
+  }
+
+  @Get(':id')
+  @ApiOperation({
+    summary: 'Obtener orden de trabajo por ID',
+    description: 'Devuelve la orden con sus ítems, vehículo y cliente.',
+  })
+  @ApiParam({ name: 'id', description: 'ID de la orden de trabajo (UUID)' })
+  @ApiResponse({ status: 200, description: 'Datos de la orden.' })
+  @ApiResponse({ status: 404, description: 'Orden no encontrada.' })
+  findOne(@CurrentWorkshop() workshopId: string, @Param('id') id: string) {
+    return this.workOrdersService.findOne(workshopId, id);
   }
 
   @Get(':id/receipt.pdf')

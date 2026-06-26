@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import PDFDocument from 'pdfkit';
-import { Prisma } from '../../generated/prisma/client';
+import { OrderStatus, Prisma } from '../../generated/prisma/client';
 import { PrismaErrorCode } from '../common/constants';
 import { PrismaService } from '../prisma/prisma.service';
 import { WorkshopScopeService } from '../common/workshop-scope/workshop-scope.service';
@@ -14,6 +14,12 @@ import { CreateWorkOrderDto } from './dto/create-work-order.dto';
 import { UpdateWorkOrderDto } from './dto/update-work-order.dto';
 import { VALID_TRANSITIONS } from './work-orders.constants';
 
+const ORDER_INCLUDE = {
+  items: true,
+  vehicle: true,
+  customer: true,
+} satisfies Prisma.WorkOrderInclude;
+
 @Injectable()
 export class WorkOrdersService {
   constructor(
@@ -21,6 +27,29 @@ export class WorkOrdersService {
     private readonly scope: WorkshopScopeService,
     private readonly vehicles: VehiclesService,
   ) {}
+
+  findAll(workshopId: string, status?: OrderStatus) {
+    return this.scope.for(workshopId).workOrder.findMany({
+      where: status ? { status } : {},
+      include: ORDER_INCLUDE,
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  findOne(workshopId: string, id: string) {
+    return this.scope
+      .for(workshopId)
+      .workOrder.findFirstOrThrow({ where: { id }, include: ORDER_INCLUDE })
+      .catch((e: unknown) => {
+        if (
+          e instanceof Prisma.PrismaClientKnownRequestError &&
+          e.code === PrismaErrorCode.NOT_FOUND
+        ) {
+          throw new NotFoundException('Orden no encontrada');
+        }
+        throw e;
+      });
+  }
 
   async create(workshopId: string, dto: CreateWorkOrderDto) {
     const {

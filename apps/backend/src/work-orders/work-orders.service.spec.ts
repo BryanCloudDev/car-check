@@ -118,3 +118,86 @@ describe('WorkOrdersService.advanceStatus', () => {
     ).rejects.toThrow(NotFoundException);
   });
 });
+
+describe('WorkOrdersService.findAll / findOne', () => {
+  let service: WorkOrdersService;
+  let scopeService: jest.Mocked<WorkshopScopeService>;
+
+  beforeEach(async () => {
+    const module = await Test.createTestingModule({
+      providers: [
+        WorkOrdersService,
+        { provide: PrismaService, useValue: {} },
+        { provide: WorkshopScopeService, useValue: { for: jest.fn() } },
+        { provide: VehiclesService, useValue: { findOrCreate: jest.fn() } },
+      ],
+    }).compile();
+
+    service = module.get(WorkOrdersService);
+    scopeService = module.get(WorkshopScopeService);
+  });
+
+  describe('findAll', () => {
+    it('lista las órdenes del taller incluyendo relaciones, sin filtro', async () => {
+      const orders = [{ id: ORDER_ID, status: OrderStatus.RECIBIDO }];
+      const findManyMock = jest.fn().mockResolvedValue(orders);
+      (scopeService.for as jest.Mock).mockReturnValue({
+        workOrder: { findMany: findManyMock },
+      });
+
+      await expect(service.findAll(WORKSHOP_ID)).resolves.toBe(orders);
+      expect(findManyMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {},
+          include: { items: true, vehicle: true, customer: true },
+          orderBy: { createdAt: 'desc' },
+        }),
+      );
+    });
+
+    it('filtra por estado cuando se provee', async () => {
+      const findManyMock = jest.fn().mockResolvedValue([]);
+      (scopeService.for as jest.Mock).mockReturnValue({
+        workOrder: { findMany: findManyMock },
+      });
+
+      await service.findAll(WORKSHOP_ID, OrderStatus.EN_PROCESO);
+
+      expect(findManyMock).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { status: OrderStatus.EN_PROCESO } }),
+      );
+    });
+  });
+
+  describe('findOne', () => {
+    it('devuelve la orden con relaciones', async () => {
+      const order = { id: ORDER_ID, status: OrderStatus.RECIBIDO };
+      const findFirstOrThrowMock = jest.fn().mockResolvedValue(order);
+      (scopeService.for as jest.Mock).mockReturnValue({
+        workOrder: { findFirstOrThrow: findFirstOrThrowMock },
+      });
+
+      await expect(service.findOne(WORKSHOP_ID, ORDER_ID)).resolves.toBe(order);
+      expect(findFirstOrThrowMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: ORDER_ID },
+          include: { items: true, vehicle: true, customer: true },
+        }),
+      );
+    });
+
+    it('lanza NotFoundException si la orden no existe', async () => {
+      const err = new Prisma.PrismaClientKnownRequestError('Not found', {
+        code: 'P2025',
+        clientVersion: '0',
+      });
+      (scopeService.for as jest.Mock).mockReturnValue({
+        workOrder: { findFirstOrThrow: jest.fn().mockRejectedValue(err) },
+      });
+
+      await expect(service.findOne(WORKSHOP_ID, ORDER_ID)).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+  });
+});
