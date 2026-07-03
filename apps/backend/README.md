@@ -1,98 +1,123 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Backend — NestJS 11
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+API REST del monorepo Car Check. Corre en el puerto `3001`.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Stack
 
-## Description
+- **NestJS 11** + **TypeScript**
+- **Prisma 7** — ORM + migraciones
+- **PostgreSQL 16** — base de datos
+- **JWT** — autenticación stateless
+- **AWS S3** — almacenamiento de media (presigned URLs)
+- **Jest** — tests unitarios y e2e
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Desarrollo local
 
-## Project setup
+### 1. Variables de entorno
 
 ```bash
-$ pnpm install
+cp .env.example .env
 ```
 
-## Compile and run the project
+Editar `.env` y completar al menos:
+
+```env
+APP_ENV=dev                        # dev | qa | prod
+JWT_SECRET=<openssl rand -base64 64>
+```
+
+Las variables AWS (`S3_BUCKET`, etc.) son opcionales hasta que necesites probar uploads.
+Para obtenerlas: `cd infra/s3 && terraform workspace select dev && terraform output`.
+
+### 2. Base de datos
 
 ```bash
-# development
-$ pnpm run start
-
-# watch mode
-$ pnpm run start:dev
-
-# production mode
-$ pnpm run start:prod
+# Desde la raíz del monorepo
+make db/up        # levanta PostgreSQL en :5432 vía Docker
+make db/migrate   # aplica migraciones pendientes
 ```
 
-## Run tests
+O directamente:
 
 ```bash
-# unit tests
-$ pnpm run test
-
-# e2e tests
-$ pnpm run test:e2e
-
-# test coverage
-$ pnpm run test:cov
+pnpm --filter backend prisma:migrate
+pnpm --filter backend prisma:seed    # carga datos de prueba
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### 3. Servidor de desarrollo
 
 ```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
+# Desde la raíz
+pnpm dev
+
+# Solo el backend
+pnpm --filter backend dev
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+## Estructura
 
-## Resources
+```
+src/
+  main.ts                    # Bootstrap — puerto, CORS, Swagger, validación global
+  app.module.ts              # Módulo raíz
+  common/
+    constants.ts             # VIN_REGEX, PrismaErrorCode
+    config/                  # env.config.ts, joi.validation.ts
+    filters/                 # HttpExceptionFilter
+    swagger/                 # Configuración centralizada de Swagger
+    workshop-scope/          # Scoping multi-tenant por taller
+  prisma/                    # PrismaService (global)
+  auth/                      # JWT strategy, guard, decoradores
+  vehicles/
+  customers/
+  work-orders/
+  media/                     # Uploads S3 — presigned URLs
+```
 
-Check out a few resources that may come in handy when working with NestJS:
+## API — Swagger
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+Con el servidor corriendo:
 
-## Support
+```
+http://localhost:3001/docs
+```
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+**Autenticarse en Swagger:**
 
-## Stay in touch
+1. `POST /api/auth/login` → copiar `accessToken`
+2. Botón **Authorize** → pegar token → **Close**
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+## Tests
 
-## License
+```bash
+pnpm --filter backend test          # unitarios
+pnpm --filter backend test:e2e      # e2e (requiere DB corriendo)
+pnpm --filter backend test:cov      # cobertura
+```
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+## Variables de entorno
+
+| Variable                | Requerida | Descripción                                  |
+| ----------------------- | --------- | -------------------------------------------- |
+| `APP_ENV`               | Sí        | `dev` / `qa` / `prod`                        |
+| `NODE_ENV`              | No        | `development` / `production` / `test`        |
+| `PORT`                  | No        | Puerto del servidor (default: `3001`)        |
+| `DATABASE_URL`          | Sí        | Connection string de PostgreSQL              |
+| `JWT_SECRET`            | Sí        | Clave secreta para firmar tokens JWT         |
+| `JWT_EXPIRATION`        | No        | Tiempo de vida del token (default: `86400s`) |
+| `AWS_REGION`            | Sí        | Región AWS del bucket S3                     |
+| `S3_BUCKET`             | Sí        | Nombre del bucket S3 (output de Terraform)   |
+| `AWS_ACCESS_KEY_ID`     | Sí        | Credencial del usuario de servicio S3        |
+| `AWS_SECRET_ACCESS_KEY` | Sí        | Credencial del usuario de servicio S3        |
+
+> Las variables AWS se configuran automáticamente al correr `make infra/dev` (o `qa`/`prod`) desde la raíz. Ver sección de infraestructura en el README raíz.
+
+## Deploy
+
+Railway auto-despliega al hacer push a la rama vinculada usando `apps/backend/Dockerfile`.
+
+Migraciones en producción:
+
+```bash
+railway run pnpm --filter backend prisma:deploy
+```

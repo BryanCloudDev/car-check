@@ -24,6 +24,7 @@ infra/
 | Docker + Docker Compose | cualquiera reciente | https://docs.docker.com/get-docker                                       |
 | Terraform               | 1.6+                | https://developer.hashicorp.com/terraform/install _(solo para infra S3)_ |
 | AWS CLI                 | 2                   | https://aws.amazon.com/cli _(solo para infra S3)_                        |
+| Railway CLI             | latest              | `curl -fsSL https://railway.app/install.sh \| sh` _(solo para infra S3)_ |
 
 ---
 
@@ -114,6 +115,17 @@ pnpm --filter backend <script>
 pnpm --filter web <script>
 ```
 
+### Infraestructura (Makefile)
+
+| Comando           | Qué hace                                                            |
+| ----------------- | ------------------------------------------------------------------- |
+| `make infra/init` | Inicializa Terraform (primera vez)                                  |
+| `make infra/dev`  | Provisiona bucket S3 dev y sube vars a Railway                      |
+| `make infra/qa`   | Provisiona bucket S3 qa y sube vars a Railway                       |
+| `make infra/prod` | Provisiona bucket S3 prod y sube vars a Railway (pide confirmación) |
+| `make db/up`      | Levanta PostgreSQL local vía Docker                                 |
+| `make db/migrate` | Aplica migraciones Prisma                                           |
+
 ---
 
 ## Git Hooks (Husky)
@@ -190,17 +202,38 @@ pnpm --filter backend prisma:migrate
 
 ## Infraestructura S3
 
-El bucket S3 para uploads de media (fotos, documentos) se provisiona con Terraform en `infra/s3/`.
+El bucket S3 para uploads de media (fotos, videos) se provisiona con Terraform en `infra/s3/`. Hay un bucket separado por entorno (`dev`, `qa`, `prod`) gestionado con Terraform workspaces.
 
-Esta sección solo es necesaria para quien va a crear o modificar la infraestructura. Si el bucket ya existe, solo necesitás que alguien te pase los valores de las 4 variables de entorno AWS.
+Esta sección solo es necesaria para quien crea o modifica infraestructura. Si los buckets ya existen, solo necesitás que alguien te pase las variables de entorno AWS correspondientes a tu entorno.
 
-### 1. Instalar Terraform
+### Estructura
+
+```
+infra/
+  s3/
+    main.tf                  # Bucket S3 + IAM de servicio
+    variables.tf
+    outputs.tf
+    envs/
+      dev.tfvars             # Config del entorno dev
+      qa.tfvars              # Config del entorno qa
+      prod.tfvars            # Config del entorno prod
+  bootstrap/
+    terraform-iam-policy.json  # Política IAM mínima para el usuario de Terraform
+  scripts/
+    provision.sh             # Aprovisiona un entorno y sube vars a Railway automáticamente
+```
+
+Naming de buckets: `car-check-media-{env}-{sufijo-aleatorio}`
+
+### Requisitos previos (una sola vez)
+
+#### 1. Instalar Terraform
 
 **macOS:**
 
 ```bash
-brew tap hashicorp/tap
-brew install hashicorp/tap/terraform
+brew tap hashicorp/tap && brew install hashicorp/tap/terraform
 ```
 
 **Linux (Debian/Ubuntu):**
@@ -209,106 +242,89 @@ brew install hashicorp/tap/terraform
 wget -O - https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
 echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
 sudo apt update && sudo apt install terraform
-```
-
-**Windows:** descargar el instalador desde https://developer.hashicorp.com/terraform/install
-
-Verificar instalación:
-
-```bash
 terraform -version   # debe mostrar >= 1.6
 ```
 
-### 2. Instalar y configurar AWS CLI
+#### 2. Instalar AWS CLI
 
-**macOS:**
-
-```bash
-brew install awscli
-```
+**macOS:** `brew install awscli`
 
 **Linux:**
 
 ```bash
 curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
 unzip awscliv2.zip && sudo ./aws/install
-```
-
-**Windows:** descargar el instalador desde https://aws.amazon.com/cli
-
-Verificar instalación:
-
-```bash
 aws --version   # debe mostrar >= 2
 ```
 
-### 3. Obtener credenciales AWS con los permisos necesarios
-
-Terraform necesita un usuario IAM (o role) con permisos para crear recursos S3 e IAM. Si no tenés acceso a la consola AWS para crear ese usuario, pedíselo a quien administre la cuenta.
-
-Los permisos mínimos que necesita ese usuario administrador son:
-
-- `s3:CreateBucket`, `s3:PutBucketPolicy`, `s3:PutBucketCORS`, `s3:PutEncryptionConfiguration`, `s3:PutPublicAccessBlock`
-- `iam:CreateUser`, `iam:CreateAccessKey`, `iam:PutUserPolicy`
-
-Una vez que tengas el `Access Key ID` y `Secret Access Key` de ese usuario administrador:
+#### 3. Instalar Railway CLI
 
 ```bash
-aws configure
-# AWS Access Key ID: <tu access key>
-# AWS Secret Access Key: <tu secret key>
-# Default region name: us-east-1  (o la región que uses)
+curl -fsSL https://railway.app/install.sh | sh
+railway login
+railway link   # vincular al proyecto Car Check desde la raíz del repo
+```
+
+#### 4. Crear el usuario IAM de Terraform en AWS (una sola vez por cuenta)
+
+En la consola AWS:
+
+1. **IAM → Policies → Create policy** → pegar el JSON de `infra/bootstrap/terraform-iam-policy.json` → nombrarla `car-check-terraform-policy`
+2. **IAM → Users → Create user** → nombre `car-check-terraform` → adjuntar `car-check-terraform-policy`
+3. Dentro del usuario → **Security credentials → Create access key** → use case: CLI → copiar el ID y el secret
+
+Configurar las credenciales localmente con un perfil dedicado:
+
+```bash
+aws configure --profile car-check
+# AWS Access Key ID:     AKIA...
+# AWS Secret Access Key: ...
+# Default region:        us-east-1
 # Default output format: json
 ```
 
-Esto guarda las credenciales en `~/.aws/credentials`. Verificar que funciona:
+Verificar:
 
 ```bash
-aws sts get-caller-identity   # debe mostrar tu ARN sin error
+aws sts get-caller-identity --profile car-check   # debe mostrar el ARN sin error
 ```
 
-### 4. Provisionar el bucket (primera vez)
+> Este usuario (`car-check-terraform`) solo se usa para correr Terraform. Los outputs de Terraform generan un segundo usuario de menor privilegio (`car-check-s3-{env}`) cuyas credenciales son las que van a Railway y al `.env` de la app.
+
+#### 5. Inicializar Terraform
 
 ```bash
-cd infra/s3
-cp terraform.tfvars.example terraform.tfvars
+make infra/init
 ```
 
-Editar `terraform.tfvars` y ajustar al menos:
+### Aprovisionar un entorno
 
-- `env`: cambiar a `"production"` si es el entorno de prod
-- `allowed_origins`: agregar el dominio real de Vercel junto a `localhost:3000`
+Un solo comando crea el bucket, configura CORS y cifrado, crea el usuario IAM de servicio, y sube todas las variables directamente al entorno de Railway:
 
 ```bash
-terraform init          # descarga los providers de AWS (solo la primera vez)
-terraform plan          # muestra qué recursos va a crear, sin aplicar nada
-terraform apply         # crea el bucket, CORS, usuario IAM y access key
+make infra/dev    # provisiona dev  → sube vars a Railway env "dev"
+make infra/qa     # provisiona qa   → sube vars a Railway env "qa"
+make infra/prod   # provisiona prod → sube vars a Railway env "prod" (pide confirmación)
 ```
 
-Terraform pedirá confirmación antes de aplicar. Escribir `yes`.
+Las variables que se configuran automáticamente en Railway son:
 
-### 5. Obtener las credenciales generadas
+| Variable                | Descripción                        |
+| ----------------------- | ---------------------------------- |
+| `APP_ENV`               | `dev` / `qa` / `prod`              |
+| `AWS_REGION`            | Región del bucket                  |
+| `S3_BUCKET`             | Nombre del bucket creado           |
+| `AWS_ACCESS_KEY_ID`     | Credencial del usuario de servicio |
+| `AWS_SECRET_ACCESS_KEY` | Credencial del usuario de servicio |
 
-Una vez aplicado, obtener los valores para las variables de entorno:
-
-```bash
-terraform output bucket_name
-terraform output aws_region
-terraform output iam_access_key_id
-terraform output -raw iam_secret_access_key   # -raw porque es sensitivo
-```
-
-Copiar esos 4 valores a `apps/backend/.env` (local) o a las variables de entorno de Railway (producción). Ver sección [Backend — Railway](#backend--railway).
+> Para desarrollo local, copiar esos valores manualmente a `apps/backend/.env` corriendo `cd infra/s3 && terraform workspace select dev && terraform output`.
 
 ### Actualizar configuración existente
 
 ```bash
-cd infra/s3
-terraform plan    # ver qué cambiaría
-terraform apply
+# Editar envs/dev.tfvars (ej: agregar un nuevo allowed_origin)
+make infra/dev   # plan + apply + sync a Railway
 ```
-
-> `terraform.tfvars` y el state (`.tfstate`) están en `.gitignore`. Nunca commitear credenciales ni el archivo de state.
 
 ---
 
@@ -337,15 +353,13 @@ El backend se despliega automáticamente al hacer merge a `main` usando `apps/ba
 
 **Variables que hay que agregar manualmente en el dashboard de Railway:**
 
-| Variable                | Valor                                         |
-| ----------------------- | --------------------------------------------- |
-| `NODE_ENV`              | `production`                                  |
-| `JWT_SECRET`            | `openssl rand -base64 64`                     |
-| `JWT_EXPIRATION`        | `86400s`                                      |
-| `AWS_REGION`            | región del bucket S3                          |
-| `S3_BUCKET`             | `terraform output bucket_name`                |
-| `AWS_ACCESS_KEY_ID`     | `terraform output iam_access_key_id`          |
-| `AWS_SECRET_ACCESS_KEY` | `terraform output -raw iam_secret_access_key` |
+| Variable                                                                | Valor                                                        |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `NODE_ENV`                                                              | `production`                                                 |
+| `APP_ENV`                                                               | `dev` / `qa` / `prod` — según el entorno de Railway          |
+| `JWT_SECRET`                                                            | `openssl rand -base64 64`                                    |
+| `JWT_EXPIRATION`                                                        | `86400s`                                                     |
+| `AWS_REGION`, `S3_BUCKET`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` | Se configuran automáticamente vía `make infra/dev\|qa\|prod` |
 
 **Migraciones en producción** — correr una sola vez después de cada deploy que cambie el schema:
 
