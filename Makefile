@@ -1,5 +1,6 @@
 .PHONY: db/up db/down db/logs db/migrate db/generate db/studio db/deploy db/reset \
-        prod/build prod/migrate prod/up prod/down prod/logs
+        prod/build prod/migrate prod/up prod/down prod/logs \
+        infra/init infra/dev infra/qa infra/prod
 
 BACKEND_DIR := apps/backend
 
@@ -52,3 +53,20 @@ prod/logs:
 
 # Full production deploy: build → migrate → start
 prod/deploy: prod/build prod/migrate prod/up
+
+# ──────────────────────────────────────────────
+# Infrastructure: S3 buckets via Terraform
+# Requires: terraform, aws CLI (profile car-check), railway CLI
+# One-time per environment — provisions bucket and pushes vars to Railway
+# ──────────────────────────────────────────────
+infra/init:
+	cd infra/s3 && AWS_PROFILE=car-check terraform init
+
+infra/dev:
+	./infra/scripts/provision.sh dev
+
+infra/qa:
+	./infra/scripts/provision.sh qa
+
+infra/prod:
+	./infra/scripts/provision.sh prod
