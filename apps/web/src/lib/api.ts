@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers';
 
-const API_URL = process.env.API_URL ?? 'http://localhost:3001';
+const API_URL = `${process.env.API_URL ?? 'http://localhost:3001'}/api`;
 
 type ApiErrorBody = {
   statusCode?: number;

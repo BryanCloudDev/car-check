@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
 
   let res: Response;
   try {
-    res = await fetch(`${API_URL}/auth/login`, {
+    res = await fetch(`${API_URL}/api/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
@@ -26,7 +26,9 @@ export async function POST(request: NextRequest) {
   }
 
   if (!res.ok) {
-    const data = await res.json().catch(() => ({ message: 'Credenciales incorrectas' }));
+    const data = await res
+      .json()
+      .catch(() => ({ message: 'Credenciales incorrectas' }));
     return NextResponse.json(data, { status: res.status });
   }
 
