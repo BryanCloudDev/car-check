@@ -35,6 +35,8 @@ export class MediaService {
         accessKeyId: this.config.get<string>('aws.accessKeyId')!,
         secretAccessKey: this.config.get<string>('aws.secretAccessKey')!,
       },
+      requestChecksumCalculation: 'WHEN_REQUIRED',
+      responseChecksumValidation: 'WHEN_REQUIRED',
     });
     this.bucket = this.config.get<string>('aws.s3Bucket')!;
   }

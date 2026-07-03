@@ -11,7 +11,7 @@ export async function GET(
   const token = (await cookies()).get('session')?.value;
 
   const res = await fetch(
-    `${API_URL}/work-orders/${encodeURIComponent(id)}/receipt.pdf`,
+    `${API_URL}/api/work-orders/${encodeURIComponent(id)}/receipt.pdf`,
     {
       cache: 'no-store',
       headers: token ? { Authorization: `Bearer ${token}` } : {},

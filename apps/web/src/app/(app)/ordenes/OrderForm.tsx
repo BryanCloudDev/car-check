@@ -39,8 +39,8 @@ function emptyRow(key: number): ItemRow {
     key,
     type: 'SERVICIO',
     description: '',
-    quantity: '1',
-    unitPrice: '0',
+    quantity: '',
+    unitPrice: '',
   };
 }
 
@@ -343,6 +343,7 @@ export function OrderForm({
                   type="number"
                   inputMode="numeric"
                   min={1}
+                  placeholder="1"
                   value={row.quantity}
                   onChange={(e) =>
                     updateRow(row.key, { quantity: e.target.value })
@@ -358,6 +359,7 @@ export function OrderForm({
                   inputMode="decimal"
                   min={0}
                   step="0.01"
+                  placeholder="0.00"
                   value={row.unitPrice}
                   onChange={(e) =>
                     updateRow(row.key, { unitPrice: e.target.value })
