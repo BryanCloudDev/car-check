@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 const ACCEPTED = [
   'image/jpeg',
@@ -12,10 +12,17 @@ const ACCEPTED = [
   'video/webm',
 ].join(',');
 
-export function MediaUpload({ orderId }: { orderId: string }) {
+export function MediaUpload({
+  orderId,
+  onSuccess,
+}: {
+  orderId: string;
+  onSuccess?: () => void;
+}) {
   const [msg, setMsg] = useState('');
   const [busy, setBusy] = useState(false);
   const [ok, setOk] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   async function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -68,26 +75,77 @@ export function MediaUpload({ orderId }: { orderId: string }) {
 
       setOk(true);
       setMsg('Archivo subido correctamente.');
+      onSuccess?.();
     } catch (err) {
       setMsg(err instanceof Error ? err.message : 'Error desconocido');
     } finally {
       setBusy(false);
+      // reset so the same file can be re-selected after an error
+      if (inputRef.current) inputRef.current.value = '';
     }
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       <input
+        ref={inputRef}
         type="file"
         accept={ACCEPTED}
         disabled={busy}
         onChange={handleChange}
-        className="block text-sm"
+        className="sr-only"
+        id={`media-upload-${orderId}`}
       />
-      {msg && (
-        <p
-          className={`text-sm font-mono ${ok ? 'text-green-700' : busy ? 'text-gray-600' : 'text-red-600'}`}
-        >
+      <label
+        htmlFor={`media-upload-${orderId}`}
+        className={`inline-flex cursor-pointer items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-colors
+          ${
+            busy
+              ? 'cursor-not-allowed border-gray-200 bg-gray-50 text-gray-400'
+              : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400 hover:bg-gray-50 active:bg-gray-100'
+          }`}
+      >
+        {busy ? (
+          <svg
+            className="h-4 w-4 animate-spin text-gray-400"
+            viewBox="0 0 24 24"
+            fill="none"
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            />
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+            />
+          </svg>
+        ) : (
+          <svg
+            className="h-4 w-4 text-gray-500"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+            <polyline points="17 8 12 3 7 8" />
+            <line x1="12" y1="3" x2="12" y2="15" />
+          </svg>
+        )}
+        {busy ? msg : 'Subir foto o video'}
+      </label>
+
+      {!busy && msg && (
+        <p className={`text-sm ${ok ? 'text-green-700' : 'text-red-600'}`}>
+          {ok ? '✓ ' : '⚠ '}
           {msg}
         </p>
       )}

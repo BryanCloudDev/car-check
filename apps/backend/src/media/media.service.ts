@@ -4,7 +4,11 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+} from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { randomUUID } from 'crypto';
 import { MediaType, Prisma } from '../../generated/prisma/client';
@@ -16,6 +20,7 @@ import { CreateUploadUrlDto } from './dto/create-upload-url.dto';
 import {
   ALLOWED_IMAGE_TYPES,
   MAX_BYTES,
+  PRESIGNED_GET_URL_EXPIRES_IN,
   PRESIGNED_URL_EXPIRES_IN,
 } from './media.constants';
 
@@ -82,6 +87,28 @@ export class MediaService {
         workOrderId: orderId,
       },
     });
+  }
+
+  async listMedia(workshopId: string, orderId: string) {
+    await this.assertOrderBelongsToWorkshop(workshopId, orderId);
+
+    const assets = await this.prisma.mediaAsset.findMany({
+      where: { workOrderId: orderId },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    return Promise.all(
+      assets.map(async (asset) => {
+        const cmd = new GetObjectCommand({
+          Bucket: this.bucket,
+          Key: asset.key,
+        });
+        const url = await getSignedUrl(this.s3, cmd, {
+          expiresIn: PRESIGNED_GET_URL_EXPIRES_IN,
+        });
+        return { ...asset, url };
+      }),
+    );
   }
 
   private async assertOrderBelongsToWorkshop(

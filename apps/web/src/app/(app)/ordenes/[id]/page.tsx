@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ApiError, apiFetch } from '@/lib/api';
-import { MediaUpload } from '@/components/MediaUpload';
+import { MediaSection } from '@/components/MediaSection';
 import type {
   Customer,
   OrderItem,
@@ -210,7 +210,7 @@ export default async function OrdenDetallePage({
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-600">
           Fotos y videos
         </h2>
-        <MediaUpload orderId={order.id} />
+        <MediaSection orderId={order.id} />
       </section>
     </div>
   );

@@ -24,3 +24,6 @@ export const MAX_BYTES = {
 
 /** Seconds until the presigned PUT URL expires */
 export const PRESIGNED_URL_EXPIRES_IN = 300; // 5 min
+
+/** Seconds until the presigned GET URL expires */
+export const PRESIGNED_GET_URL_EXPIRES_IN = 300; // 5 min

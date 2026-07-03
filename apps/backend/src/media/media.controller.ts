@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Param,
@@ -19,6 +20,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { MediaService } from './media.service';
 import { ConfirmUploadDto } from './dto/confirm-upload.dto';
 import { CreateUploadUrlDto } from './dto/create-upload-url.dto';
+import { MediaAssetResponse } from './dto/media-asset.response';
 
 @ApiTags('media')
 @ApiBearerAuth('access-token')
@@ -30,6 +32,29 @@ import { CreateUploadUrlDto } from './dto/create-upload-url.dto';
 @Controller('work-orders')
 export class MediaController {
   constructor(private readonly mediaService: MediaService) {}
+
+  @Get(':orderId/media')
+  @ApiOperation({
+    summary: 'Listar media de una orden',
+    description:
+      'Devuelve los assets multimedia registrados para la orden, cada uno con una URL pre-firmada de lectura S3 (expira en 5 min).',
+  })
+  @ApiParam({
+    name: 'orderId',
+    description: 'ID de la orden de trabajo (UUID)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de assets con URL pre-firmada.',
+    type: [MediaAssetResponse],
+  })
+  @ApiResponse({ status: 404, description: 'Orden no encontrada.' })
+  listMedia(
+    @CurrentWorkshop() workshopId: string,
+    @Param('orderId') orderId: string,
+  ) {
+    return this.mediaService.listMedia(workshopId, orderId);
+  }
 
   @Post(':orderId/media/upload-url')
   @HttpCode(HttpStatus.OK)
