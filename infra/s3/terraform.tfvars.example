@@ -1,11 +1,30 @@
-# Copy to terraform.tfvars and fill in values before running.
-# terraform.tfvars is gitignored — never commit real credentials.
-
-aws_region = "us-east-1"
-project    = "car-check"
-env        = "production"
-
-allowed_origins = [
-  "http://localhost:3000",
-  "https://your-vercel-domain.vercel.app",  # replace with real prod URL
-]
+# Per-environment tfvars are already in envs/ — use those directly.
+# This file is kept as a reference for custom overrides only.
+#
+# USAGE — run once per environment using Terraform workspaces:
+#
+#   terraform init
+#
+#   terraform workspace new dev   # only needed the first time
+#   terraform workspace select dev
+#   terraform apply -var-file=envs/dev.tfvars
+#
+#   terraform workspace new qa
+#   terraform workspace select qa
+#   terraform apply -var-file=envs/qa.tfvars
+#
+#   terraform workspace new prod
+#   terraform workspace select prod
+#   terraform apply -var-file=envs/prod.tfvars
+#
+# After apply, get env vars for your Railway deployment:
+#
+#   terraform output bucket_name          # → S3_BUCKET
+#   terraform output aws_region           # → AWS_REGION
+#   terraform output iam_access_key_id    # → AWS_ACCESS_KEY_ID
+#   terraform output -raw iam_secret_access_key  # → AWS_SECRET_ACCESS_KEY
+#
+# Bucket names follow the pattern: car-check-media-{env}-{random-suffix}
+#   dev:  car-check-media-dev-xxxxxxxx
+#   qa:   car-check-media-qa-xxxxxxxx
+#   prod: car-check-media-prod-xxxxxxxx

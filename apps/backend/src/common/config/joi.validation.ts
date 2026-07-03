@@ -4,6 +4,7 @@ export const JoiValidationSchema = Joi.object({
   NODE_ENV: Joi.string()
     .valid('development', 'production', 'test')
     .default('development'),
+  APP_ENV: Joi.string().valid('dev', 'qa', 'prod').required(),
   PORT: Joi.number().default(3000),
 
   JWT_SECRET: Joi.string().required(),

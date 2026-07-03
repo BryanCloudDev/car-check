@@ -33,7 +33,7 @@ locals {
 # ------------------------------------------------------------
 resource "aws_s3_bucket" "media" {
   bucket        = local.bucket_name
-  force_destroy = var.env != "production"
+  force_destroy = var.env != "prod"
 
   tags = {
     Project     = var.project
