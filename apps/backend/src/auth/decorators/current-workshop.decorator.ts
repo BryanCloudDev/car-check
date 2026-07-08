@@ -3,5 +3,6 @@ import { AuthenticatedUser } from '../jwt.strategy';
 
 export const CurrentWorkshop = createParamDecorator(
   (_data: unknown, ctx: ExecutionContext): string =>
-    (ctx.switchToHttp().getRequest().user as AuthenticatedUser).workshopId,
+    ctx.switchToHttp().getRequest<{ user: AuthenticatedUser }>().user
+      .workshopId,
 );
