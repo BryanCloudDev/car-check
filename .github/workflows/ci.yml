@@ -62,6 +62,15 @@ jobs:
 
     env:
       DATABASE_URL: postgresql://car_check:car_check@localhost:5432/car_check
+      POSTGRES_USER: car_check
+      POSTGRES_PASSWORD: car_check
+      POSTGRES_DB: car_check
+      APP_ENV: dev
+      JWT_SECRET: ci-test-secret
+      AWS_REGION: us-east-1
+      S3_BUCKET: ci-bucket
+      AWS_ACCESS_KEY_ID: ci-key
+      AWS_SECRET_ACCESS_KEY: ci-secret
 
     steps:
       - name: Checkout
