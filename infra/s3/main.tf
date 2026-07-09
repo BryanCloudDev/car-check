@@ -4,7 +4,7 @@ terraform {
   cloud {
     organization = "car-check"
     workspaces {
-      tags = ["car-check-s3"]
+      name = "car-check-s3-dev"
     }
   }
 
