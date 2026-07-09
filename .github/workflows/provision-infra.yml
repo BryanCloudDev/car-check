@@ -38,51 +38,13 @@ jobs:
 
           if [ "$ENV" = "prod" ]; then
             echo "railway_service=${{ secrets.RAILWAY_BACKEND_SERVICE_ID_PROD }}" >> $GITHUB_OUTPUT
+            echo "railway_env_id=f14b3d44-6455-4e7b-8948-72342ee28771" >> $GITHUB_OUTPUT
             echo "frontend_url=${{ secrets.FRONTEND_URL_PROD }}" >> $GITHUB_OUTPUT
           else
             echo "railway_service=${{ secrets.RAILWAY_BACKEND_SERVICE_ID_DEV }}" >> $GITHUB_OUTPUT
+            echo "railway_env_id=e924fcc6-57e0-4946-8c04-9630aab7ea93" >> $GITHUB_OUTPUT
             echo "frontend_url=${{ secrets.FRONTEND_URL_DEV }}" >> $GITHUB_OUTPUT
           fi
-
-      - name: Resolve Railway environment ID
-        id: railway
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
-          ENV_NAME: ${{ steps.env.outputs.name }}
-        run: |
-          ENV_ID=$(python3 << 'PYEOF'
-          import json, urllib.request, os, sys
-
-          token = os.environ["RAILWAY_TOKEN"]
-          project_id = os.environ["RAILWAY_PROJECT_ID"]
-          env_name = os.environ["ENV_NAME"]
-
-          payload = json.dumps({
-              "query": '{ project(id: "' + project_id + '") { environments { edges { node { id name } } } } }'
-          }).encode()
-
-          req = urllib.request.Request(
-              "https://backboard.railway.app/graphql/v2",
-              data=payload,
-              headers={"Authorization": "Bearer " + token, "Content-Type": "application/json"}
-          )
-          with urllib.request.urlopen(req) as resp:
-              data = json.loads(resp.read())
-
-          edges = data["data"]["project"]["environments"]["edges"]
-          match = next(
-              (e["node"]["id"] for e in edges if e["node"]["name"].lower() == env_name.lower()),
-              None
-          )
-          if not match:
-              names = [e["node"]["name"] for e in edges]
-              print("Available environments: " + str(names), file=sys.stderr)
-              sys.exit(1)
-          print(match, end="")
-          PYEOF
-          )
-          echo "env_id=$ENV_ID" >> $GITHUB_OUTPUT
 
       - name: Install Railway CLI
         run: npm install -g @railway/cli
@@ -94,7 +56,7 @@ jobs:
         run: |
           VARS=$(railway variables \
             --project ${{ secrets.RAILWAY_PROJECT_ID }} \
-            --environment ${{ steps.railway.outputs.env_id }} \
+            --environment ${{ steps.env.outputs.railway_env_id }} \
             --service ${{ steps.env.outputs.railway_service }} \
             2>/dev/null || echo "")
           if echo "$VARS" | grep -q "S3_BUCKET"; then
@@ -209,7 +171,7 @@ jobs:
         run: |
           railway variables set \
             --project ${{ secrets.RAILWAY_PROJECT_ID }} \
-            --environment ${{ steps.railway.outputs.env_id }} \
+            --environment ${{ steps.env.outputs.railway_env_id }} \
             --service ${{ steps.env.outputs.railway_service }} \
             "S3_BUCKET=$(terraform output -raw bucket_name)" \
             "AWS_REGION=$(terraform output -raw aws_region)" \
