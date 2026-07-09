@@ -1,12 +1,7 @@
 terraform {
   required_version = ">= 1.6"
 
-  cloud {
-    organization = "car-check-infra"
-    workspaces {
-      name = "car-check-s3-dev"
-    }
-  }
+  backend "s3" {}
 
   required_providers {
     aws = {

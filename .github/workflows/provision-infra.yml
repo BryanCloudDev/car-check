@@ -12,6 +12,10 @@ on:
         type: choice
         options: [dev, prod]
 
+concurrency:
+  group: provision-infra-${{ github.ref_name }}
+  cancel-in-progress: false
+
 jobs:
   provision-s3:
     name: Provision S3
@@ -66,25 +70,61 @@ jobs:
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: "~1.6"
-          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
           terraform_wrapper: false
 
-      - name: Ensure Terraform workspace exists
+      - name: Ensure Terraform state bucket exists
         if: steps.check.outputs.skip == 'false'
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_TF_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_TF_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: us-east-1
         run: |
-          WORKSPACE="car-check-s3-${{ steps.env.outputs.name }}"
-          HTTP=$(curl -s -o /dev/null -w "%{http_code}" \
-            --header "Authorization: Bearer ${{ secrets.TF_API_TOKEN }}" \
-            --header "Content-Type: application/vnd.api+json" \
-            --request POST \
-            --data "{\"data\":{\"type\":\"workspaces\",\"attributes\":{\"name\":\"$WORKSPACE\",\"execution-mode\":\"local\"}}}" \
-            https://app.terraform.io/api/v2/organizations/car-check-infra/workspaces)
-          if [ "$HTTP" = "201" ]; then
-            echo "Workspace $WORKSPACE created"
-          elif [ "$HTTP" = "422" ]; then
-            echo "Workspace $WORKSPACE already exists"
+          aws s3api head-bucket --bucket car-check-tf-state 2>/dev/null || \
+            aws s3api create-bucket --bucket car-check-tf-state --region us-east-1
+          aws s3api put-bucket-versioning \
+            --bucket car-check-tf-state \
+            --versioning-configuration Status=Enabled
+          aws s3api put-public-access-block \
+            --bucket car-check-tf-state \
+            --public-access-block-configuration \
+            BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true
+
+      - name: Clean up orphaned AWS resources
+        if: steps.check.outputs.skip == 'false'
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_TF_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_TF_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: us-east-1
+        run: |
+          ENV="${{ steps.env.outputs.name }}"
+
+          # Delete orphaned media buckets for this environment
+          for bucket in $(aws s3api list-buckets \
+            --query "Buckets[?starts_with(Name, 'car-check-media-${ENV}-')].Name" \
+            --output text 2>/dev/null); do
+            echo "Removing orphaned bucket: $bucket"
+            aws s3 rb "s3://$bucket" --force
+          done
+
+          # Delete orphaned IAM service user if exists
+          USER="car-check-s3-${ENV}"
+          if aws iam get-user --user-name "$USER" >/dev/null 2>&1; then
+            echo "Removing orphaned IAM user: $USER"
+            for policy in $(aws iam list-user-policies \
+              --user-name "$USER" \
+              --query 'PolicyNames[]' \
+              --output text 2>/dev/null); do
+              aws iam delete-user-policy --user-name "$USER" --policy-name "$policy"
+            done
+            for key in $(aws iam list-access-keys \
+              --user-name "$USER" \
+              --query 'AccessKeyMetadata[].AccessKeyId' \
+              --output text 2>/dev/null); do
+              aws iam delete-access-key --user-name "$USER" --access-key-id "$key"
+            done
+            aws iam delete-user --user-name "$USER"
           else
-            echo "Unexpected HTTP $HTTP creating workspace" && exit 1
+            echo "No orphaned IAM user: $USER"
           fi
 
       - name: Terraform Init
@@ -93,8 +133,12 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_TF_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_TF_SECRET_ACCESS_KEY }}
-          TF_WORKSPACE: car-check-s3-${{ steps.env.outputs.name }}
-        run: terraform init
+        run: |
+          terraform init \
+            -backend-config="bucket=car-check-tf-state" \
+            -backend-config="key=s3/${{ steps.env.outputs.name }}/terraform.tfstate" \
+            -backend-config="region=us-east-1" \
+            -backend-config="encrypt=true"
 
       - name: Terraform Apply
         if: steps.check.outputs.skip == 'false'
@@ -102,9 +146,8 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_TF_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_TF_SECRET_ACCESS_KEY }}
-          TF_WORKSPACE: car-check-s3-${{ steps.env.outputs.name }}
         run: |
-          terraform apply -auto-approve -lock=false \
+          terraform apply -auto-approve \
             -var="env=${{ steps.env.outputs.name }}" \
             -var='allowed_origins=["${{ steps.env.outputs.frontend_url }}"]'
 
@@ -114,7 +157,6 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_TF_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_TF_SECRET_ACCESS_KEY }}
-          TF_WORKSPACE: car-check-s3-${{ steps.env.outputs.name }}
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: |
           railway variables set \

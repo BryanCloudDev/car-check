@@ -27,7 +27,8 @@
         "s3:GetBucketRequestPayment",
         "s3:GetBucketWebsite",
         "s3:GetReplicationConfiguration",
-        "s3:GetAccelerateConfiguration"
+        "s3:GetAccelerateConfiguration",
+        "s3:GetBucketOwnershipControls"
       ],
       "Resource": "arn:aws:s3:::car-check-media-*"
     },
@@ -36,6 +37,32 @@
       "Effect": "Allow",
       "Action": ["s3:DeleteObject", "s3:DeleteObjectVersion"],
       "Resource": "arn:aws:s3:::car-check-media-*/*"
+    },
+    {
+      "Sid": "TerraformStateBucketLevel",
+      "Effect": "Allow",
+      "Action": [
+        "s3:CreateBucket",
+        "s3:ListBucket",
+        "s3:GetBucketVersioning",
+        "s3:PutBucketVersioning",
+        "s3:GetBucketLocation",
+        "s3:GetBucketPublicAccessBlock",
+        "s3:PutBucketPublicAccessBlock"
+      ],
+      "Resource": "arn:aws:s3:::car-check-tf-state"
+    },
+    {
+      "Sid": "TerraformStateBucketObjects",
+      "Effect": "Allow",
+      "Action": ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"],
+      "Resource": "arn:aws:s3:::car-check-tf-state/*"
+    },
+    {
+      "Sid": "S3ListAllBuckets",
+      "Effect": "Allow",
+      "Action": ["s3:ListAllMyBuckets"],
+      "Resource": "*"
     },
     {
       "Sid": "IAMServiceUserManagement",
@@ -52,7 +79,8 @@
         "iam:ListAccessKeys",
         "iam:PutUserPolicy",
         "iam:DeleteUserPolicy",
-        "iam:GetUserPolicy"
+        "iam:GetUserPolicy",
+        "iam:ListUserPolicies"
       ],
       "Resource": "arn:aws:iam::*:user/service/car-check-s3-*"
     }
