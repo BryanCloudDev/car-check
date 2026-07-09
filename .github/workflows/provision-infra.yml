@@ -70,11 +70,12 @@ jobs:
               }
           }).encode()
 
+          token = os.environ["RAILWAY_API_TOKEN"]
           req = urllib.request.Request(
               "https://backboard.railway.com/graphql/v2",
               data=payload,
               headers={
-                  "Authorization": "Bearer " + os.environ["RAILWAY_API_TOKEN"],
+                  "Authorization": "Bearer " + token,
                   "Content-Type": "application/json",
               }
           )
@@ -83,6 +84,9 @@ jobs:
                   result = json.loads(resp.read())
                   variables = result.get("data", {}).get("variables") or {}
                   print("true" if "S3_BUCKET" in variables else "false")
+          except urllib.error.HTTPError as e:
+              print(f"HTTP {e.code}: {e.read().decode()}", file=sys.stderr)
+              print("false")
           except Exception as e:
               print(f"Warning: {e}", file=sys.stderr)
               print("false")
@@ -229,21 +233,26 @@ jobs:
               }
           }).encode()
 
+          token = os.environ["RAILWAY_API_TOKEN"]
           req = urllib.request.Request(
               "https://backboard.railway.com/graphql/v2",
               data=payload,
               headers={
-                  "Authorization": "Bearer " + os.environ["RAILWAY_API_TOKEN"],
+                  "Authorization": "Bearer " + token,
                   "Content-Type": "application/json",
               }
           )
-          with urllib.request.urlopen(req) as resp:
-              result = json.loads(resp.read())
-              if "errors" in result:
-                  print("GraphQL errors:", result["errors"], file=sys.stderr)
-                  sys.exit(1)
-              if not result.get("data", {}).get("variableCollectionUpsert"):
-                  print("variableCollectionUpsert returned false", file=sys.stderr)
-                  sys.exit(1)
-              print("Variables injected successfully")
+          try:
+              with urllib.request.urlopen(req) as resp:
+                  result = json.loads(resp.read())
+                  if "errors" in result:
+                      print("GraphQL errors:", result["errors"], file=sys.stderr)
+                      sys.exit(1)
+                  if not result.get("data", {}).get("variableCollectionUpsert"):
+                      print("variableCollectionUpsert returned false", file=sys.stderr)
+                      sys.exit(1)
+                  print("Variables injected successfully")
+          except urllib.error.HTTPError as e:
+              print(f"HTTP {e.code}: {e.read().decode()}", file=sys.stderr)
+              sys.exit(1)
           PYEOF
