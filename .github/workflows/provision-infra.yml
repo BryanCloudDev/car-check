@@ -86,7 +86,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_TF_SECRET_ACCESS_KEY }}
           TF_WORKSPACE: car-check-s3-${{ steps.env.outputs.name }}
         run: |
-          terraform apply -auto-approve \
+          terraform apply -auto-approve -lock=false \
             -var="env=${{ steps.env.outputs.name }}" \
             -var='allowed_origins=["${{ steps.env.outputs.frontend_url }}"]'
 
