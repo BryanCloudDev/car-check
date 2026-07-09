@@ -52,7 +52,7 @@ jobs:
       - name: Check if S3 already provisioned
         id: check
         env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_API_TOKEN: ${{ secrets.RAILWAY_API_TOKEN }}
         run: |
           VARS=$(railway variables \
             --project ${{ secrets.RAILWAY_PROJECT_ID }} \
@@ -167,7 +167,7 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_TF_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_TF_SECRET_ACCESS_KEY }}
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_API_TOKEN: ${{ secrets.RAILWAY_API_TOKEN }}
         run: |
           railway variables set \
             --project ${{ secrets.RAILWAY_PROJECT_ID }} \
