@@ -69,6 +69,24 @@ jobs:
           cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
           terraform_wrapper: false
 
+      - name: Ensure Terraform workspace exists
+        if: steps.check.outputs.skip == 'false'
+        run: |
+          WORKSPACE="car-check-s3-${{ steps.env.outputs.name }}"
+          HTTP=$(curl -s -o /dev/null -w "%{http_code}" \
+            --header "Authorization: Bearer ${{ secrets.TF_API_TOKEN }}" \
+            --header "Content-Type: application/vnd.api+json" \
+            --request POST \
+            --data "{\"data\":{\"type\":\"workspaces\",\"attributes\":{\"name\":\"$WORKSPACE\",\"execution-mode\":\"local\"}}}" \
+            https://app.terraform.io/api/v2/organizations/car-check-infra/workspaces)
+          if [ "$HTTP" = "201" ]; then
+            echo "Workspace $WORKSPACE created"
+          elif [ "$HTTP" = "422" ]; then
+            echo "Workspace $WORKSPACE already exists"
+          else
+            echo "Unexpected HTTP $HTTP creating workspace" && exit 1
+          fi
+
       - name: Terraform Init
         if: steps.check.outputs.skip == 'false'
         working-directory: infra/s3
