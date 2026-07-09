@@ -1,0 +1,109 @@
+name: Provision Infrastructure
+
+on:
+  push:
+    branches: [main, dev]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Environment to provision
+        required: true
+        default: dev
+        type: choice
+        options: [dev, prod]
+
+jobs:
+  provision-s3:
+    name: Provision S3
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve environment
+        id: env
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            ENV="${{ github.event.inputs.environment }}"
+          elif [ "${{ github.ref_name }}" = "main" ]; then
+            ENV="prod"
+          else
+            ENV="dev"
+          fi
+          echo "name=$ENV" >> $GITHUB_OUTPUT
+
+          if [ "$ENV" = "prod" ]; then
+            echo "railway_service=${{ secrets.RAILWAY_BACKEND_SERVICE_ID_PROD }}" >> $GITHUB_OUTPUT
+            echo "frontend_url=${{ secrets.FRONTEND_URL_PROD }}" >> $GITHUB_OUTPUT
+          else
+            echo "railway_service=${{ secrets.RAILWAY_BACKEND_SERVICE_ID_DEV }}" >> $GITHUB_OUTPUT
+            echo "frontend_url=${{ secrets.FRONTEND_URL_DEV }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Check if S3 already provisioned
+        id: check
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          VARS=$(railway variables \
+            --project ${{ secrets.RAILWAY_PROJECT_ID }} \
+            --environment ${{ steps.env.outputs.name }} \
+            --service ${{ steps.env.outputs.railway_service }} \
+            2>/dev/null || echo "")
+          if echo "$VARS" | grep -q "S3_BUCKET"; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "S3 already provisioned for ${{ steps.env.outputs.name }} — skipping"
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+            echo "S3 not found for ${{ steps.env.outputs.name }} — provisioning"
+          fi
+
+      - name: Setup Terraform
+        if: steps.check.outputs.skip == 'false'
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "~1.6"
+          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+          terraform_wrapper: false
+
+      - name: Terraform Init
+        if: steps.check.outputs.skip == 'false'
+        working-directory: infra/s3
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_TF_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_TF_SECRET_ACCESS_KEY }}
+          TF_WORKSPACE: car-check-s3-${{ steps.env.outputs.name }}
+        run: terraform init
+
+      - name: Terraform Apply
+        if: steps.check.outputs.skip == 'false'
+        working-directory: infra/s3
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_TF_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_TF_SECRET_ACCESS_KEY }}
+          TF_WORKSPACE: car-check-s3-${{ steps.env.outputs.name }}
+        run: |
+          terraform apply -auto-approve \
+            -var="env=${{ steps.env.outputs.name }}" \
+            -var='allowed_origins=["${{ steps.env.outputs.frontend_url }}"]'
+
+      - name: Inject vars into Railway
+        if: steps.check.outputs.skip == 'false'
+        working-directory: infra/s3
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_TF_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_TF_SECRET_ACCESS_KEY }}
+          TF_WORKSPACE: car-check-s3-${{ steps.env.outputs.name }}
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          railway variables set \
+            "S3_BUCKET=$(terraform output -raw bucket_name)" \
+            "AWS_REGION=$(terraform output -raw aws_region)" \
+            "AWS_ACCESS_KEY_ID=$(terraform output -raw iam_access_key_id)" \
+            "AWS_SECRET_ACCESS_KEY=$(terraform output -raw iam_secret_access_key)" \
+            --project ${{ secrets.RAILWAY_PROJECT_ID }} \
+            --environment ${{ steps.env.outputs.name }} \
+            --service ${{ steps.env.outputs.railway_service }}

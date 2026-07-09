@@ -1,6 +1,13 @@
 terraform {
   required_version = ">= 1.6"
 
+  cloud {
+    organization = "org-U85qUAssM86xo1sz"
+    workspaces {
+      tags = ["car-check-s3"]
+    }
+  }
+
   required_providers {
     aws = {
       source  = "hashicorp/aws"
