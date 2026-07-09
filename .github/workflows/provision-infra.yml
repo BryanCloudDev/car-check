@@ -44,6 +44,46 @@ jobs:
             echo "frontend_url=${{ secrets.FRONTEND_URL_DEV }}" >> $GITHUB_OUTPUT
           fi
 
+      - name: Resolve Railway environment ID
+        id: railway
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+          ENV_NAME: ${{ steps.env.outputs.name }}
+        run: |
+          ENV_ID=$(python3 << 'PYEOF'
+          import json, urllib.request, os, sys
+
+          token = os.environ["RAILWAY_TOKEN"]
+          project_id = os.environ["RAILWAY_PROJECT_ID"]
+          env_name = os.environ["ENV_NAME"]
+
+          payload = json.dumps({
+              "query": '{ project(id: "' + project_id + '") { environments { edges { node { id name } } } } }'
+          }).encode()
+
+          req = urllib.request.Request(
+              "https://backboard.railway.app/graphql/v2",
+              data=payload,
+              headers={"Authorization": "Bearer " + token, "Content-Type": "application/json"}
+          )
+          with urllib.request.urlopen(req) as resp:
+              data = json.loads(resp.read())
+
+          edges = data["data"]["project"]["environments"]["edges"]
+          match = next(
+              (e["node"]["id"] for e in edges if e["node"]["name"].lower() == env_name.lower()),
+              None
+          )
+          if not match:
+              names = [e["node"]["name"] for e in edges]
+              print("Available environments: " + str(names), file=sys.stderr)
+              sys.exit(1)
+          print(match, end="")
+          PYEOF
+          )
+          echo "env_id=$ENV_ID" >> $GITHUB_OUTPUT
+
       - name: Install Railway CLI
         run: npm install -g @railway/cli
 
@@ -54,7 +94,7 @@ jobs:
         run: |
           VARS=$(railway variables \
             --project ${{ secrets.RAILWAY_PROJECT_ID }} \
-            --environment ${{ steps.env.outputs.name }} \
+            --environment ${{ steps.railway.outputs.env_id }} \
             --service ${{ steps.env.outputs.railway_service }} \
             2>/dev/null || echo "")
           if echo "$VARS" | grep -q "S3_BUCKET"; then
@@ -97,34 +137,42 @@ jobs:
           AWS_DEFAULT_REGION: us-east-1
         run: |
           ENV="${{ steps.env.outputs.name }}"
+          STATE_KEY="s3/${ENV}/terraform.tfstate"
 
-          # Delete orphaned media buckets for this environment
-          for bucket in $(aws s3api list-buckets \
-            --query "Buckets[?starts_with(Name, 'car-check-media-${ENV}-')].Name" \
-            --output text 2>/dev/null); do
-            echo "Removing orphaned bucket: $bucket"
-            aws s3 rb "s3://$bucket" --force
-          done
-
-          # Delete orphaned IAM service user if exists
-          USER="car-check-s3-${ENV}"
-          if aws iam get-user --user-name "$USER" >/dev/null 2>&1; then
-            echo "Removing orphaned IAM user: $USER"
-            for policy in $(aws iam list-user-policies \
-              --user-name "$USER" \
-              --query 'PolicyNames[]' \
-              --output text 2>/dev/null); do
-              aws iam delete-user-policy --user-name "$USER" --policy-name "$policy"
-            done
-            for key in $(aws iam list-access-keys \
-              --user-name "$USER" \
-              --query 'AccessKeyMetadata[].AccessKeyId' \
-              --output text 2>/dev/null); do
-              aws iam delete-access-key --user-name "$USER" --access-key-id "$key"
-            done
-            aws iam delete-user --user-name "$USER"
+          # Only clean up if no Terraform state exists yet (true first-time provision)
+          if aws s3api head-object \
+            --bucket car-check-tf-state \
+            --key "$STATE_KEY" >/dev/null 2>&1; then
+            echo "Terraform state exists — skipping cleanup, resources are managed"
           else
-            echo "No orphaned IAM user: $USER"
+            echo "No Terraform state — cleaning up orphaned resources"
+
+            for bucket in $(aws s3api list-buckets \
+              --query "Buckets[?starts_with(Name, 'car-check-media-${ENV}-')].Name" \
+              --output text 2>/dev/null); do
+              echo "Removing orphaned bucket: $bucket"
+              aws s3 rb "s3://$bucket" --force
+            done
+
+            USER="car-check-s3-${ENV}"
+            if aws iam get-user --user-name "$USER" >/dev/null 2>&1; then
+              echo "Removing orphaned IAM user: $USER"
+              for policy in $(aws iam list-user-policies \
+                --user-name "$USER" \
+                --query 'PolicyNames[]' \
+                --output text 2>/dev/null); do
+                aws iam delete-user-policy --user-name "$USER" --policy-name "$policy"
+              done
+              for key in $(aws iam list-access-keys \
+                --user-name "$USER" \
+                --query 'AccessKeyMetadata[].AccessKeyId' \
+                --output text 2>/dev/null); do
+                aws iam delete-access-key --user-name "$USER" --access-key-id "$key"
+              done
+              aws iam delete-user --user-name "$USER"
+            else
+              echo "No orphaned IAM user: $USER"
+            fi
           fi
 
       - name: Terraform Init
@@ -160,10 +208,10 @@ jobs:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: |
           railway variables set \
+            --project ${{ secrets.RAILWAY_PROJECT_ID }} \
+            --environment ${{ steps.railway.outputs.env_id }} \
+            --service ${{ steps.env.outputs.railway_service }} \
             "S3_BUCKET=$(terraform output -raw bucket_name)" \
             "AWS_REGION=$(terraform output -raw aws_region)" \
             "AWS_ACCESS_KEY_ID=$(terraform output -raw iam_access_key_id)" \
-            "AWS_SECRET_ACCESS_KEY=$(terraform output -raw iam_secret_access_key)" \
-            --project ${{ secrets.RAILWAY_PROJECT_ID }} \
-            --environment ${{ steps.env.outputs.name }} \
-            --service ${{ steps.env.outputs.railway_service }}
+            "AWS_SECRET_ACCESS_KEY=$(terraform output -raw iam_secret_access_key)"
