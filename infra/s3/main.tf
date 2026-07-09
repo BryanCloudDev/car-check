@@ -2,7 +2,7 @@ terraform {
   required_version = ">= 1.6"
 
   cloud {
-    organization = "org-U85qUAssM86xo1sz"
+    organization = "car-check"
     workspaces {
       tags = ["car-check-s3"]
     }
