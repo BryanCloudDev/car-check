@@ -35,31 +35,60 @@ jobs:
             ENV="dev"
           fi
           echo "name=$ENV" >> $GITHUB_OUTPUT
+          # Backend service ID (same service across environments)
+          echo "railway_service=3adc7681-508c-4c8a-be01-d793c05b4909" >> $GITHUB_OUTPUT
 
           if [ "$ENV" = "prod" ]; then
-            echo "railway_service=${{ secrets.RAILWAY_BACKEND_SERVICE_ID_PROD }}" >> $GITHUB_OUTPUT
             echo "railway_env_id=f14b3d44-6455-4e7b-8948-72342ee28771" >> $GITHUB_OUTPUT
             echo "frontend_url=${{ secrets.FRONTEND_URL_PROD }}" >> $GITHUB_OUTPUT
           else
-            echo "railway_service=${{ secrets.RAILWAY_BACKEND_SERVICE_ID_DEV }}" >> $GITHUB_OUTPUT
             echo "railway_env_id=e924fcc6-57e0-4946-8c04-9630aab7ea93" >> $GITHUB_OUTPUT
             echo "frontend_url=${{ secrets.FRONTEND_URL_DEV }}" >> $GITHUB_OUTPUT
           fi
-
-      - name: Install Railway CLI
-        run: npm install -g @railway/cli
 
       - name: Check if S3 already provisioned
         id: check
         env:
           RAILWAY_API_TOKEN: ${{ secrets.RAILWAY_API_TOKEN }}
+          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+          RAILWAY_ENVIRONMENT_ID: ${{ steps.env.outputs.railway_env_id }}
+          RAILWAY_SERVICE_ID: ${{ steps.env.outputs.railway_service }}
         run: |
-          VARS=$(railway variables \
-            --project ${{ secrets.RAILWAY_PROJECT_ID }} \
-            --environment ${{ steps.env.outputs.railway_env_id }} \
-            --service ${{ steps.env.outputs.railway_service }} \
-            2>/dev/null || echo "")
-          if echo "$VARS" | grep -q "S3_BUCKET"; then
+          RESULT=$(python3 << 'PYEOF'
+          import json, urllib.request, os, sys
+
+          payload = json.dumps({
+              "query": """
+                query variables($projectId: String!, $environmentId: String!, $serviceId: String) {
+                  variables(projectId: $projectId, environmentId: $environmentId, serviceId: $serviceId)
+                }
+              """,
+              "variables": {
+                  "projectId": os.environ["RAILWAY_PROJECT_ID"],
+                  "environmentId": os.environ["RAILWAY_ENVIRONMENT_ID"],
+                  "serviceId": os.environ["RAILWAY_SERVICE_ID"],
+              }
+          }).encode()
+
+          req = urllib.request.Request(
+              "https://backboard.railway.app/graphql/v2",
+              data=payload,
+              headers={
+                  "Authorization": "Bearer " + os.environ["RAILWAY_API_TOKEN"],
+                  "Content-Type": "application/json",
+              }
+          )
+          try:
+              with urllib.request.urlopen(req) as resp:
+                  result = json.loads(resp.read())
+                  variables = result.get("data", {}).get("variables") or {}
+                  print("true" if "S3_BUCKET" in variables else "false")
+          except Exception as e:
+              print(f"Warning: {e}", file=sys.stderr)
+              print("false")
+          PYEOF
+          )
+          if [ "$RESULT" = "true" ]; then
             echo "skip=true" >> $GITHUB_OUTPUT
             echo "S3 already provisioned for ${{ steps.env.outputs.name }} — skipping"
           else
@@ -101,7 +130,6 @@ jobs:
           ENV="${{ steps.env.outputs.name }}"
           STATE_KEY="s3/${ENV}/terraform.tfstate"
 
-          # Only clean up if no Terraform state exists yet (true first-time provision)
           if aws s3api head-object \
             --bucket car-check-tf-state \
             --key "$STATE_KEY" >/dev/null 2>&1; then
@@ -168,12 +196,54 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_TF_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_TF_SECRET_ACCESS_KEY }}
           RAILWAY_API_TOKEN: ${{ secrets.RAILWAY_API_TOKEN }}
+          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+          RAILWAY_ENVIRONMENT_ID: ${{ steps.env.outputs.railway_env_id }}
+          RAILWAY_SERVICE_ID: ${{ steps.env.outputs.railway_service }}
         run: |
-          railway variables set \
-            --project ${{ secrets.RAILWAY_PROJECT_ID }} \
-            --environment ${{ steps.env.outputs.railway_env_id }} \
-            --service ${{ steps.env.outputs.railway_service }} \
-            "S3_BUCKET=$(terraform output -raw bucket_name)" \
-            "AWS_REGION=$(terraform output -raw aws_region)" \
-            "AWS_ACCESS_KEY_ID=$(terraform output -raw iam_access_key_id)" \
-            "AWS_SECRET_ACCESS_KEY=$(terraform output -raw iam_secret_access_key)"
+          export TF_BUCKET=$(terraform output -raw bucket_name)
+          export TF_REGION=$(terraform output -raw aws_region)
+          export TF_KEY_ID=$(terraform output -raw iam_access_key_id)
+          export TF_SECRET=$(terraform output -raw iam_secret_access_key)
+
+          python3 << 'PYEOF'
+          import json, urllib.request, os, sys
+
+          payload = json.dumps({
+              "query": """
+                mutation variableCollectionUpsert($input: VariableCollectionUpsertInput!) {
+                  variableCollectionUpsert(input: $input)
+                }
+              """,
+              "variables": {
+                  "input": {
+                      "projectId": os.environ["RAILWAY_PROJECT_ID"],
+                      "environmentId": os.environ["RAILWAY_ENVIRONMENT_ID"],
+                      "serviceId": os.environ["RAILWAY_SERVICE_ID"],
+                      "variables": {
+                          "S3_BUCKET": os.environ["TF_BUCKET"],
+                          "AWS_REGION": os.environ["TF_REGION"],
+                          "AWS_ACCESS_KEY_ID": os.environ["TF_KEY_ID"],
+                          "AWS_SECRET_ACCESS_KEY": os.environ["TF_SECRET"],
+                      },
+                  }
+              }
+          }).encode()
+
+          req = urllib.request.Request(
+              "https://backboard.railway.app/graphql/v2",
+              data=payload,
+              headers={
+                  "Authorization": "Bearer " + os.environ["RAILWAY_API_TOKEN"],
+                  "Content-Type": "application/json",
+              }
+          )
+          with urllib.request.urlopen(req) as resp:
+              result = json.loads(resp.read())
+              if "errors" in result:
+                  print("GraphQL errors:", result["errors"], file=sys.stderr)
+                  sys.exit(1)
+              if not result.get("data", {}).get("variableCollectionUpsert"):
+                  print("variableCollectionUpsert returned false", file=sys.stderr)
+                  sys.exit(1)
+              print("Variables injected successfully")
+          PYEOF
