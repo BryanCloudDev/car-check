@@ -71,7 +71,7 @@ jobs:
           }).encode()
 
           req = urllib.request.Request(
-              "https://backboard.railway.app/graphql/v2",
+              "https://backboard.railway.com/graphql/v2",
               data=payload,
               headers={
                   "Authorization": "Bearer " + os.environ["RAILWAY_API_TOKEN"],
@@ -230,7 +230,7 @@ jobs:
           }).encode()
 
           req = urllib.request.Request(
-              "https://backboard.railway.app/graphql/v2",
+              "https://backboard.railway.com/graphql/v2",
               data=payload,
               headers={
                   "Authorization": "Bearer " + os.environ["RAILWAY_API_TOKEN"],
