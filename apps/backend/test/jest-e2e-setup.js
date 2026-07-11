@@ -20,6 +20,7 @@ process.env.NODE_ENV = 'test';
 
 // Defaults: solo se aplican si la var no está ya definida (p.ej. viene de .env o CI)
 const defaults = {
+  APP_ENV: 'dev',
   JWT_SECRET: 'e2e-test-jwt-secret-do-not-use-in-production',
   AWS_REGION: 'us-east-1',
   S3_BUCKET: 'test-bucket',
