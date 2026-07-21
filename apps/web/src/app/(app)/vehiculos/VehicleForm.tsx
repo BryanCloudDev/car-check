@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
+import { useTranslations } from 'next-intl';
 import type { Vehicle } from '@car-check/shared';
 import type { VehicleFormState } from './actions';
 
@@ -23,13 +24,14 @@ function FieldError({ message }: { message?: string }) {
 
 function SubmitButton({ label }: { label: string }) {
   const { pending } = useFormStatus();
+  const t = useTranslations('vehiculos.form');
   return (
     <button
       type="submit"
       disabled={pending}
       className="rounded-lg bg-gray-900 px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60"
     >
-      {pending ? 'Guardando…' : label}
+      {pending ? t('saving') : label}
     </button>
   );
 }
@@ -43,6 +45,7 @@ export function VehicleForm({
   vehicle?: Vehicle;
   submitLabel: string;
 }) {
+  const t = useTranslations('vehiculos.form');
   const [state, formAction] = useActionState<VehicleFormState, FormData>(
     action,
     {},
@@ -60,7 +63,7 @@ export function VehicleForm({
 
       <div>
         <label htmlFor="vin" className={labelClass}>
-          VIN
+          {t('vin')}
         </label>
         {isEdit ? (
           <p className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-2 font-mono text-sm text-gray-500">
@@ -74,7 +77,7 @@ export function VehicleForm({
               type="text"
               autoComplete="off"
               maxLength={17}
-              placeholder="1HGCM82633A004352"
+              placeholder={t('vinPlaceholder')}
               className={`${inputClass} font-mono uppercase placeholder:font-sans placeholder:normal-case`}
               aria-invalid={Boolean(fieldErrors.vin)}
             />
@@ -86,56 +89,56 @@ export function VehicleForm({
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <div>
           <label htmlFor="plate" className={labelClass}>
-            Placa
+            {t('plate')}
           </label>
           <input
             id="plate"
             name="plate"
             type="text"
             autoComplete="off"
-            placeholder="ABC-123"
+            placeholder={t('platePlaceholder')}
             defaultValue={vehicle?.plate ?? ''}
             className={inputClass}
           />
         </div>
         <div>
           <label htmlFor="make" className={labelClass}>
-            Marca
+            {t('make')}
           </label>
           <input
             id="make"
             name="make"
             type="text"
             autoComplete="off"
-            placeholder="Honda"
+            placeholder={t('makePlaceholder')}
             defaultValue={vehicle?.make ?? ''}
             className={inputClass}
           />
         </div>
         <div>
           <label htmlFor="model" className={labelClass}>
-            Modelo
+            {t('model')}
           </label>
           <input
             id="model"
             name="model"
             type="text"
             autoComplete="off"
-            placeholder="Civic"
+            placeholder={t('modelPlaceholder')}
             defaultValue={vehicle?.model ?? ''}
             className={inputClass}
           />
         </div>
         <div>
           <label htmlFor="year" className={labelClass}>
-            Año
+            {t('year')}
           </label>
           <input
             id="year"
             name="year"
             type="number"
             inputMode="numeric"
-            placeholder="2020"
+            placeholder={t('yearPlaceholder')}
             defaultValue={vehicle?.year ?? ''}
             className={inputClass}
             aria-invalid={Boolean(fieldErrors.year)}
@@ -144,14 +147,14 @@ export function VehicleForm({
         </div>
         <div>
           <label htmlFor="mileage" className={labelClass}>
-            Kilometraje
+            {t('mileage')}
           </label>
           <input
             id="mileage"
             name="mileage"
             type="number"
             inputMode="numeric"
-            placeholder="45000"
+            placeholder={t('mileagePlaceholder')}
             defaultValue={vehicle?.mileage ?? ''}
             className={inputClass}
             aria-invalid={Boolean(fieldErrors.mileage)}
@@ -166,7 +169,7 @@ export function VehicleForm({
           href="/vehiculos"
           className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900"
         >
-          Cancelar
+          {t('cancel')}
         </Link>
       </div>
     </form>

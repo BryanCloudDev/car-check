@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { getTranslations } from 'next-intl/server';
 import { apiFetch } from '@/lib/api';
 import type { Vehicle } from '@car-check/shared';
 
@@ -7,6 +8,7 @@ export default async function VehiculosPage({
 }: {
   searchParams: Promise<{ q?: string }>;
 }) {
+  const t = await getTranslations('vehiculos');
   const { q: rawQ } = await searchParams;
   const q = rawQ?.trim();
 
@@ -17,18 +19,18 @@ export default async function VehiculosPage({
     const path = q ? `/vehicles?q=${encodeURIComponent(q)}` : '/vehicles';
     vehicles = await apiFetch<Vehicle[]>(path);
   } catch (err) {
-    error = err instanceof Error ? err.message : 'Error al cargar vehículos';
+    error = err instanceof Error ? err.message : t('loadError');
   }
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold text-gray-900">Vehículos</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{t('title')}</h1>
         <Link
           href="/vehiculos/nuevo"
           className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-800"
         >
-          Registrar vehículo
+          {t('register')}
         </Link>
       </div>
 
@@ -39,7 +41,7 @@ export default async function VehiculosPage({
             htmlFor="q"
             className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-600"
           >
-            Buscar
+            {t('search')}
           </label>
           <div className="relative">
             <input
@@ -47,14 +49,14 @@ export default async function VehiculosPage({
               type="text"
               name="q"
               defaultValue={q ?? ''}
-              placeholder="VIN exacto o placa"
+              placeholder={t('searchPlaceholder')}
               autoComplete="off"
               className="w-full rounded-lg border border-gray-300 px-4 py-2 pr-9 text-sm text-gray-900 placeholder:text-gray-400 focus:border-gray-500 focus:outline-none"
             />
             {q && (
               <Link
                 href="/vehiculos"
-                aria-label="Limpiar búsqueda"
+                aria-label={t('clearSearch')}
                 className="absolute right-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-base leading-none text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
               >
                 ×
@@ -66,7 +68,7 @@ export default async function VehiculosPage({
           type="submit"
           className="rounded-lg bg-gray-900 px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-800"
         >
-          Buscar
+          {t('searchButton')}
         </button>
       </form>
 
@@ -78,9 +80,7 @@ export default async function VehiculosPage({
 
       {!error && vehicles.length === 0 && (
         <p className="text-sm text-gray-500">
-          {q
-            ? `No se encontraron vehículos para "${q}".`
-            : 'No hay vehículos registrados.'}
+          {q ? t('noResults', { query: q }) : t('empty')}
         </p>
       )}
 
@@ -89,13 +89,13 @@ export default async function VehiculosPage({
           <table className="w-full min-w-[48rem] text-sm">
             <thead className="bg-gray-50 text-gray-600 uppercase text-xs tracking-wide">
               <tr>
-                <th className="px-4 py-3 text-left">VIN</th>
-                <th className="px-4 py-3 text-left">Placa</th>
-                <th className="px-4 py-3 text-left">Marca</th>
-                <th className="px-4 py-3 text-left">Modelo</th>
-                <th className="px-4 py-3 text-left">Año</th>
-                <th className="px-4 py-3 text-left">Kilometraje</th>
-                <th className="px-4 py-3 text-right">Acciones</th>
+                <th className="px-4 py-3 text-left">{t('columns.vin')}</th>
+                <th className="px-4 py-3 text-left">{t('columns.plate')}</th>
+                <th className="px-4 py-3 text-left">{t('columns.make')}</th>
+                <th className="px-4 py-3 text-left">{t('columns.model')}</th>
+                <th className="px-4 py-3 text-left">{t('columns.year')}</th>
+                <th className="px-4 py-3 text-left">{t('columns.mileage')}</th>
+                <th className="px-4 py-3 text-right">{t('columns.actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -116,13 +116,13 @@ export default async function VehiculosPage({
                       href={`/vehiculos/${encodeURIComponent(v.vin)}/editar`}
                       className="font-medium text-gray-700 transition-colors hover:text-gray-900"
                     >
-                      Editar
+                      {t('edit')}
                     </Link>
                     <Link
                       href={`/historial?vin=${encodeURIComponent(v.vin)}`}
                       className="ml-4 font-medium text-gray-500 transition-colors hover:text-gray-900"
                     >
-                      Historial
+                      {t('history')}
                     </Link>
                   </td>
                 </tr>

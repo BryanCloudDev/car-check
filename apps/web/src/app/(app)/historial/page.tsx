@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { getTranslations } from 'next-intl/server';
 import { ApiError, apiFetch } from '@/lib/api';
 import type {
   OrderItem,
@@ -8,13 +9,6 @@ import type {
 } from '@car-check/shared';
 
 type WorkOrderWithItems = WorkOrder & { items: OrderItem[] };
-
-const STATUS_LABELS: Record<OrderStatus, string> = {
-  RECIBIDO: 'Recibido',
-  EN_PROCESO: 'En proceso',
-  LISTO: 'Listo',
-  ENTREGADO: 'Entregado',
-};
 
 const STATUS_STYLES: Record<OrderStatus, string> = {
   RECIBIDO: 'bg-gray-100 text-gray-700',
@@ -46,6 +40,7 @@ export default async function HistorialPage({
 }: {
   searchParams: Promise<{ vin?: string }>;
 }) {
+  const t = await getTranslations('historial');
   const { vin: rawVin } = await searchParams;
   const vin = rawVin?.trim().toUpperCase();
 
@@ -62,20 +57,18 @@ export default async function HistorialPage({
       ]);
     } catch (err) {
       if (err instanceof ApiError && err.status === 404) {
-        error = `No se encontró ningún vehículo con el VIN "${vin}".`;
+        error = t('notFound', { vin });
       } else if (err instanceof ApiError && err.status === 400) {
-        error = 'El VIN ingresado no es válido (debe tener 17 caracteres).';
+        error = t('invalidVin');
       } else {
-        error = 'Ocurrió un error al consultar el historial.';
+        error = t('genericError');
       }
     }
   }
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">
-        Historial por VIN
-      </h1>
+      <h1 className="text-2xl font-bold text-gray-900 mb-6">{t('title')}</h1>
 
       {/* Buscador */}
       <form method="get" className="mb-8 flex items-end gap-3 max-w-xl">
@@ -84,7 +77,7 @@ export default async function HistorialPage({
             htmlFor="vin"
             className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-600"
           >
-            VIN
+            {t('vinLabel')}
           </label>
           <div className="relative">
             <input
@@ -92,14 +85,14 @@ export default async function HistorialPage({
               type="text"
               name="vin"
               defaultValue={vin ?? ''}
-              placeholder="Ingresá el VIN (17 caracteres)"
+              placeholder={t('vinPlaceholder')}
               autoComplete="off"
               className="w-full rounded-lg border border-gray-300 px-4 py-2 pr-9 text-sm font-mono uppercase text-gray-900 placeholder:font-sans placeholder:normal-case placeholder:text-gray-400 focus:border-gray-500 focus:outline-none"
             />
             {vin && (
               <Link
                 href="/historial"
-                aria-label="Limpiar búsqueda"
+                aria-label={t('clearSearch')}
                 className="absolute right-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-base leading-none text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
               >
                 ×
@@ -111,7 +104,7 @@ export default async function HistorialPage({
           type="submit"
           className="rounded-lg bg-gray-900 px-5 py-2 text-sm font-medium text-white hover:bg-gray-800 transition-colors"
         >
-          Buscar
+          {t('searchButton')}
         </button>
       </form>
 
@@ -121,11 +114,7 @@ export default async function HistorialPage({
         </div>
       )}
 
-      {!vin && !error && (
-        <p className="text-sm text-gray-500">
-          Ingresá un VIN para consultar el historial completo del vehículo.
-        </p>
-      )}
+      {!vin && !error && <p className="text-sm text-gray-500">{t('prompt')}</p>}
 
       {vehicle && (
         <>
@@ -135,7 +124,7 @@ export default async function HistorialPage({
               <h2 className="text-lg font-semibold text-gray-900">
                 {[vehicle.make, vehicle.model, vehicle.year]
                   .filter(Boolean)
-                  .join(' ') || 'Vehículo'}
+                  .join(' ') || t('vehicleFallback')}
               </h2>
               <span className="font-mono text-sm text-gray-500">
                 {vehicle.vin}
@@ -143,19 +132,19 @@ export default async function HistorialPage({
             </div>
             <dl className="mt-4 grid grid-cols-2 gap-x-8 gap-y-2 text-sm sm:grid-cols-4">
               <div>
-                <dt className="text-gray-500">Placa</dt>
+                <dt className="text-gray-500">{t('vehicle.plate')}</dt>
                 <dd className="text-gray-900">{vehicle.plate ?? '—'}</dd>
               </div>
               <div>
-                <dt className="text-gray-500">Marca</dt>
+                <dt className="text-gray-500">{t('vehicle.make')}</dt>
                 <dd className="text-gray-900">{vehicle.make ?? '—'}</dd>
               </div>
               <div>
-                <dt className="text-gray-500">Modelo</dt>
+                <dt className="text-gray-500">{t('vehicle.model')}</dt>
                 <dd className="text-gray-900">{vehicle.model ?? '—'}</dd>
               </div>
               <div>
-                <dt className="text-gray-500">Kilometraje</dt>
+                <dt className="text-gray-500">{t('vehicle.mileage')}</dt>
                 <dd className="text-gray-900">
                   {vehicle.mileage != null
                     ? `${vehicle.mileage.toLocaleString()} km`
@@ -167,13 +156,11 @@ export default async function HistorialPage({
 
           {/* Historial de órdenes */}
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-600">
-            Órdenes de trabajo ({history.length})
+            {t('ordersTitle', { count: history.length })}
           </h2>
 
           {history.length === 0 ? (
-            <p className="text-sm text-gray-500">
-              Este vehículo no tiene órdenes de trabajo registradas.
-            </p>
+            <p className="text-sm text-gray-500">{t('noOrders')}</p>
           ) : (
             <ol className="space-y-4">
               {history.map((order) => (
@@ -186,7 +173,7 @@ export default async function HistorialPage({
                       <span
                         className={`rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_STYLES[order.status]}`}
                       >
-                        {STATUS_LABELS[order.status]}
+                        {t(`status.${order.status}`)}
                       </span>
                       <span className="text-sm text-gray-500">
                         {formatDate(order.serviceDate)}
@@ -213,11 +200,21 @@ export default async function HistorialPage({
                       <table className="w-full min-w-[32rem] text-sm">
                         <thead className="bg-gray-50 text-gray-500 uppercase text-xs tracking-wide">
                           <tr>
-                            <th className="px-3 py-2 text-left">Descripción</th>
-                            <th className="px-3 py-2 text-left">Tipo</th>
-                            <th className="px-3 py-2 text-right">Cant.</th>
-                            <th className="px-3 py-2 text-right">P. unit.</th>
-                            <th className="px-3 py-2 text-right">Subtotal</th>
+                            <th className="px-3 py-2 text-left">
+                              {t('itemColumns.description')}
+                            </th>
+                            <th className="px-3 py-2 text-left">
+                              {t('itemColumns.type')}
+                            </th>
+                            <th className="px-3 py-2 text-right">
+                              {t('itemColumns.quantity')}
+                            </th>
+                            <th className="px-3 py-2 text-right">
+                              {t('itemColumns.unitPrice')}
+                            </th>
+                            <th className="px-3 py-2 text-right">
+                              {t('itemColumns.subtotal')}
+                            </th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
@@ -227,9 +224,7 @@ export default async function HistorialPage({
                                 {item.description}
                               </td>
                               <td className="px-3 py-2 text-gray-500">
-                                {item.type === 'SERVICIO'
-                                  ? 'Servicio'
-                                  : 'Repuesto'}
+                                {t(`itemType.${item.type}`)}
                               </td>
                               <td className="px-3 py-2 text-right text-gray-600">
                                 {item.quantity}

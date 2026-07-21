@@ -66,5 +66,95 @@
       "updateFailed": "Could not update the customer. Please try again.",
       "notFound": "The customer no longer exists."
     }
+  },
+  "vehiculos": {
+    "title": "Vehicles",
+    "register": "Add vehicle",
+    "loadError": "Failed to load vehicles",
+    "empty": "No vehicles registered.",
+    "search": "Search",
+    "searchButton": "Search",
+    "searchPlaceholder": "Exact VIN or plate",
+    "clearSearch": "Clear search",
+    "noResults": "No vehicles found for “{query}”.",
+    "columns": {
+      "vin": "VIN",
+      "plate": "Plate",
+      "make": "Make",
+      "model": "Model",
+      "year": "Year",
+      "mileage": "Mileage",
+      "actions": "Actions"
+    },
+    "edit": "Edit",
+    "history": "History",
+    "back": "← Back to vehicles",
+    "newTitle": "Add vehicle",
+    "editTitle": "Edit vehicle",
+    "submitNew": "Add",
+    "submitEdit": "Save changes",
+    "form": {
+      "vin": "VIN",
+      "vinPlaceholder": "1HGCM82633A004352",
+      "plate": "Plate",
+      "platePlaceholder": "ABC-123",
+      "make": "Make",
+      "makePlaceholder": "Honda",
+      "model": "Model",
+      "modelPlaceholder": "Civic",
+      "year": "Year",
+      "yearPlaceholder": "2020",
+      "mileage": "Mileage",
+      "mileagePlaceholder": "45000",
+      "cancel": "Cancel",
+      "saving": "Saving…"
+    },
+    "errors": {
+      "yearRange": "Year must be between 1885 and {max}.",
+      "mileageInvalid": "Mileage must be a positive whole number.",
+      "vinInvalid": "The VIN must be 17 alphanumeric characters (no I, O, Q).",
+      "vinExists": "A vehicle with that VIN already exists.",
+      "invalidData": "Invalid data. Check the fields and try again.",
+      "createFailed": "Could not add the vehicle. Please try again.",
+      "updateFailed": "Could not update the vehicle. Please try again.",
+      "notFound": "The vehicle no longer exists."
+    }
+  },
+  "historial": {
+    "title": "History by VIN",
+    "vinLabel": "VIN",
+    "vinPlaceholder": "Enter the VIN (17 characters)",
+    "clearSearch": "Clear search",
+    "searchButton": "Search",
+    "prompt": "Enter a VIN to view the vehicle's full history.",
+    "notFound": "No vehicle found with VIN “{vin}”.",
+    "invalidVin": "The VIN entered is not valid (must be 17 characters).",
+    "genericError": "An error occurred while fetching the history.",
+    "vehicleFallback": "Vehicle",
+    "vehicle": {
+      "plate": "Plate",
+      "make": "Make",
+      "model": "Model",
+      "mileage": "Mileage"
+    },
+    "ordersTitle": "Work orders ({count})",
+    "noOrders": "This vehicle has no work orders registered.",
+    "status": {
+      "RECIBIDO": "Received",
+      "EN_PROCESO": "In progress",
+      "LISTO": "Ready",
+      "ENTREGADO": "Delivered"
+    },
+    "itemColumns": {
+      "description": "Description",
+      "type": "Type",
+      "quantity": "Qty.",
+      "unitPrice": "Unit price",
+      "subtotal": "Subtotal"
+    },
+    "itemType": {
+      "SERVICIO": "Service",
+      "REPUESTO": "Part"
+    }
   }
 }

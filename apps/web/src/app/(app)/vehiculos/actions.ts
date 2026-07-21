@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import { ApiError, apiFetch } from '@/lib/api';
 import type { Vehicle } from '@car-check/shared';
 
@@ -17,7 +18,10 @@ type ParsedFields = {
   errors: Record<string, string>;
 };
 
-function parseOptionalFields(formData: FormData): ParsedFields {
+function parseOptionalFields(
+  formData: FormData,
+  t: (key: string, values?: Record<string, string | number>) => string,
+): ParsedFields {
   const values: Record<string, string | number> = {};
   const errors: Record<string, string> = {};
 
@@ -31,7 +35,7 @@ function parseOptionalFields(formData: FormData): ParsedFields {
     const year = Number(yearRaw);
     const maxYear = new Date().getFullYear() + 1;
     if (!Number.isInteger(year) || year < 1885 || year > maxYear) {
-      errors.year = `El año debe estar entre 1885 y ${maxYear}.`;
+      errors.year = t('yearRange', { max: maxYear });
     } else {
       values.year = year;
     }
@@ -41,7 +45,7 @@ function parseOptionalFields(formData: FormData): ParsedFields {
   if (mileageRaw) {
     const mileage = Number(mileageRaw);
     if (!Number.isInteger(mileage) || mileage < 0) {
-      errors.mileage = 'El kilometraje debe ser un número entero positivo.';
+      errors.mileage = t('mileageInvalid');
     } else {
       values.mileage = mileage;
     }
@@ -54,13 +58,14 @@ export async function createVehicleAction(
   _prev: VehicleFormState,
   formData: FormData,
 ): Promise<VehicleFormState> {
+  const t = await getTranslations('vehiculos.errors');
   const vin = String(formData.get('vin') ?? '')
     .trim()
     .toUpperCase();
-  const { values, errors } = parseOptionalFields(formData);
+  const { values, errors } = parseOptionalFields(formData, t);
 
   if (!VIN_REGEX.test(vin)) {
-    errors.vin = 'El VIN debe tener 17 caracteres alfanuméricos (sin I, O, Q).';
+    errors.vin = t('vinInvalid');
   }
   if (Object.keys(errors).length > 0) {
     return { fieldErrors: errors };
@@ -73,16 +78,14 @@ export async function createVehicleAction(
     });
   } catch (err) {
     if (err instanceof ApiError && err.status === 409) {
-      return { fieldErrors: { vin: 'Ya existe un vehículo con ese VIN.' } };
+      return { fieldErrors: { vin: t('vinExists') } };
     }
     if (err instanceof ApiError && err.status === 400) {
       return {
-        error:
-          err.firstMessage ??
-          'Datos inválidos. Revisá los campos e intentá de nuevo.',
+        error: err.firstMessage ?? t('invalidData'),
       };
     }
-    return { error: 'No se pudo registrar el vehículo. Intentá de nuevo.' };
+    return { error: t('createFailed') };
   }
 
   revalidatePath('/vehiculos');
@@ -94,7 +97,8 @@ export async function updateVehicleAction(
   _prev: VehicleFormState,
   formData: FormData,
 ): Promise<VehicleFormState> {
-  const { values, errors } = parseOptionalFields(formData);
+  const t = await getTranslations('vehiculos.errors');
+  const { values, errors } = parseOptionalFields(formData, t);
   if (Object.keys(errors).length > 0) {
     return { fieldErrors: errors };
   }
@@ -106,16 +110,14 @@ export async function updateVehicleAction(
     });
   } catch (err) {
     if (err instanceof ApiError && err.status === 404) {
-      return { error: 'El vehículo ya no existe.' };
+      return { error: t('notFound') };
     }
     if (err instanceof ApiError && err.status === 400) {
       return {
-        error:
-          err.firstMessage ??
-          'Datos inválidos. Revisá los campos e intentá de nuevo.',
+        error: err.firstMessage ?? t('invalidData'),
       };
     }
-    return { error: 'No se pudo actualizar el vehículo. Intentá de nuevo.' };
+    return { error: t('updateFailed') };
   }
 
   revalidatePath('/vehiculos');

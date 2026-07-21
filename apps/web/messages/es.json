@@ -66,5 +66,95 @@
       "updateFailed": "No se pudo actualizar el cliente. Intentá de nuevo.",
       "notFound": "El cliente ya no existe."
     }
+  },
+  "vehiculos": {
+    "title": "Vehículos",
+    "register": "Registrar vehículo",
+    "loadError": "Error al cargar vehículos",
+    "empty": "No hay vehículos registrados.",
+    "search": "Buscar",
+    "searchButton": "Buscar",
+    "searchPlaceholder": "VIN exacto o placa",
+    "clearSearch": "Limpiar búsqueda",
+    "noResults": "No se encontraron vehículos para “{query}”.",
+    "columns": {
+      "vin": "VIN",
+      "plate": "Placa",
+      "make": "Marca",
+      "model": "Modelo",
+      "year": "Año",
+      "mileage": "Kilometraje",
+      "actions": "Acciones"
+    },
+    "edit": "Editar",
+    "history": "Historial",
+    "back": "← Volver a vehículos",
+    "newTitle": "Registrar vehículo",
+    "editTitle": "Editar vehículo",
+    "submitNew": "Registrar",
+    "submitEdit": "Guardar cambios",
+    "form": {
+      "vin": "VIN",
+      "vinPlaceholder": "1HGCM82633A004352",
+      "plate": "Placa",
+      "platePlaceholder": "ABC-123",
+      "make": "Marca",
+      "makePlaceholder": "Honda",
+      "model": "Modelo",
+      "modelPlaceholder": "Civic",
+      "year": "Año",
+      "yearPlaceholder": "2020",
+      "mileage": "Kilometraje",
+      "mileagePlaceholder": "45000",
+      "cancel": "Cancelar",
+      "saving": "Guardando…"
+    },
+    "errors": {
+      "yearRange": "El año debe estar entre 1885 y {max}.",
+      "mileageInvalid": "El kilometraje debe ser un número entero positivo.",
+      "vinInvalid": "El VIN debe tener 17 caracteres alfanuméricos (sin I, O, Q).",
+      "vinExists": "Ya existe un vehículo con ese VIN.",
+      "invalidData": "Datos inválidos. Revisá los campos e intentá de nuevo.",
+      "createFailed": "No se pudo registrar el vehículo. Intentá de nuevo.",
+      "updateFailed": "No se pudo actualizar el vehículo. Intentá de nuevo.",
+      "notFound": "El vehículo ya no existe."
+    }
+  },
+  "historial": {
+    "title": "Historial por VIN",
+    "vinLabel": "VIN",
+    "vinPlaceholder": "Ingresá el VIN (17 caracteres)",
+    "clearSearch": "Limpiar búsqueda",
+    "searchButton": "Buscar",
+    "prompt": "Ingresá un VIN para consultar el historial completo del vehículo.",
+    "notFound": "No se encontró ningún vehículo con el VIN “{vin}”.",
+    "invalidVin": "El VIN ingresado no es válido (debe tener 17 caracteres).",
+    "genericError": "Ocurrió un error al consultar el historial.",
+    "vehicleFallback": "Vehículo",
+    "vehicle": {
+      "plate": "Placa",
+      "make": "Marca",
+      "model": "Modelo",
+      "mileage": "Kilometraje"
+    },
+    "ordersTitle": "Órdenes de trabajo ({count})",
+    "noOrders": "Este vehículo no tiene órdenes de trabajo registradas.",
+    "status": {
+      "RECIBIDO": "Recibido",
+      "EN_PROCESO": "En proceso",
+      "LISTO": "Listo",
+      "ENTREGADO": "Entregado"
+    },
+    "itemColumns": {
+      "description": "Descripción",
+      "type": "Tipo",
+      "quantity": "Cant.",
+      "unitPrice": "P. unit.",
+      "subtotal": "Subtotal"
+    },
+    "itemType": {
+      "SERVICIO": "Servicio",
+      "REPUESTO": "Repuesto"
+    }
   }
 }

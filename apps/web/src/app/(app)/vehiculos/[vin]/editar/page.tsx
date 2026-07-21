@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import { ApiError, apiFetch } from '@/lib/api';
 import type { Vehicle } from '@car-check/shared';
 import { updateVehicleAction } from '../../actions';
@@ -10,6 +11,7 @@ export default async function EditarVehiculoPage({
 }: {
   params: Promise<{ vin: string }>;
 }) {
+  const t = await getTranslations('vehiculos');
   const { vin: rawVin } = await params;
   const vin = decodeURIComponent(rawVin).trim().toUpperCase();
 
@@ -31,13 +33,15 @@ export default async function EditarVehiculoPage({
         href="/vehiculos"
         className="mb-4 inline-block text-sm text-gray-500 transition-colors hover:text-gray-900"
       >
-        ← Volver a vehículos
+        {t('back')}
       </Link>
-      <h1 className="mb-6 text-2xl font-bold text-gray-900">Editar vehículo</h1>
+      <h1 className="mb-6 text-2xl font-bold text-gray-900">
+        {t('editTitle')}
+      </h1>
       <VehicleForm
         action={action}
         vehicle={vehicle}
-        submitLabel="Guardar cambios"
+        submitLabel={t('submitEdit')}
       />
     </div>
   );
