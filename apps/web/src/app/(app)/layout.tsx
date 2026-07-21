@@ -1,3 +1,4 @@
+import { NextIntlClientProvider } from 'next-intl';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { AppShell } from '@/components/AppShell';
@@ -10,5 +11,9 @@ async function logout() {
 }
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  return <AppShell logout={logout}>{children}</AppShell>;
+  return (
+    <NextIntlClientProvider>
+      <AppShell logout={logout}>{children}</AppShell>
+    </NextIntlClientProvider>
+  );
 }

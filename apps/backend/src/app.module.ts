@@ -1,5 +1,7 @@
+import * as path from 'path';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { AcceptLanguageResolver, I18nModule } from 'nestjs-i18n';
 import { envConfiguration } from './common/config/env.config';
 import { JoiValidationSchema } from './common/config/joi.validation';
 import { PrismaModule } from './prisma/prisma.module';
@@ -16,6 +18,14 @@ import { MediaModule } from './media/media.module';
       isGlobal: true,
       load: [envConfiguration],
       validationSchema: JoiValidationSchema,
+    }),
+    I18nModule.forRoot({
+      fallbackLanguage: 'es',
+      loaderOptions: {
+        path: path.join(__dirname, '/i18n/'),
+        watch: true,
+      },
+      resolvers: [AcceptLanguageResolver],
     }),
     PrismaModule,
     WorkshopScopeModule,

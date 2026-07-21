@@ -1,0 +1,18 @@
+{
+  "common": {
+    "appName": "Car Check",
+    "loading": "Loading…"
+  },
+  "auth": {
+    "title": "Car Check",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Sign in",
+    "submitting": "Signing in…",
+    "invalidCredentials": "Invalid credentials",
+    "networkError": "Network error. Please try again."
+  },
+  "nav": {
+    "logout": "Sign out"
+  }
+}
