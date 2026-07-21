@@ -1,0 +1,33 @@
+{
+  "title": "Comprobante de Orden",
+  "sections": {
+    "order": "Datos de la Orden",
+    "customer": "Cliente",
+    "vehicle": "Vehículo",
+    "items": "Servicios y Repuestos",
+    "notes": "Notas"
+  },
+  "fields": {
+    "id": "ID",
+    "date": "Fecha",
+    "status": "Estado",
+    "serviceDate": "Fecha de servicio",
+    "mileage": "Kilometraje",
+    "name": "Nombre",
+    "phone": "Teléfono",
+    "email": "Email",
+    "vin": "VIN",
+    "make": "Marca",
+    "model": "Modelo",
+    "year": "Año",
+    "plate": "Placa"
+  },
+  "table": {
+    "type": "Tipo",
+    "description": "Descripción",
+    "quantity": "Cant.",
+    "unitPrice": "P. Unit.",
+    "subtotal": "Subtotal"
+  },
+  "total": "Total"
+}

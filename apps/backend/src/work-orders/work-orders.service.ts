@@ -3,6 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { I18nContext, I18nService } from 'nestjs-i18n';
 import PDFDocument from 'pdfkit';
 import { OrderStatus, Prisma } from '../../generated/prisma/client';
 import { PrismaErrorCode } from '../common/constants';
@@ -26,6 +27,7 @@ export class WorkOrdersService {
     private readonly prisma: PrismaService,
     private readonly scope: WorkshopScopeService,
     private readonly vehicles: VehiclesService,
+    private readonly i18n: I18nService,
   ) {}
 
   findAll(workshopId: string, status?: OrderStatus) {
@@ -163,6 +165,11 @@ export class WorkOrdersService {
         throw e;
       });
 
+    const lang = I18nContext.current()?.lang ?? 'es';
+    const t = (key: string): string =>
+      this.i18n.translate(`receipt.${key}`, { lang });
+    const dateLocale = lang.startsWith('en') ? 'en-US' : 'es-MX';
+
     return new Promise<Buffer>((resolve, reject) => {
       const doc = new PDFDocument({ margin: 50 });
       const chunks: Buffer[] = [];
@@ -175,48 +182,53 @@ export class WorkOrdersService {
         .fontSize(18)
         .font('Helvetica-Bold')
         .text(order.workshop.name, { align: 'center' });
-      doc
-        .fontSize(14)
-        .font('Helvetica')
-        .text('Comprobante de Orden', { align: 'center' });
+      doc.fontSize(14).font('Helvetica').text(t('title'), { align: 'center' });
       doc.moveDown();
 
       // Order info
-      doc.fontSize(11).font('Helvetica-Bold').text('Datos de la Orden');
+      doc.fontSize(11).font('Helvetica-Bold').text(t('sections.order'));
       doc.font('Helvetica');
-      doc.text(`ID: ${id.slice(0, 8).toUpperCase()}`);
-      doc.text(`Fecha: ${order.createdAt.toLocaleDateString('es-MX')}`);
-      doc.text(`Estado: ${order.status}`);
+      doc.text(`${t('fields.id')}: ${id.slice(0, 8).toUpperCase()}`);
+      doc.text(
+        `${t('fields.date')}: ${order.createdAt.toLocaleDateString(dateLocale)}`,
+      );
+      doc.text(`${t('fields.status')}: ${order.status}`);
       if (order.serviceDate) {
         doc.text(
-          `Fecha de servicio: ${order.serviceDate.toLocaleDateString('es-MX')}`,
+          `${t('fields.serviceDate')}: ${order.serviceDate.toLocaleDateString(dateLocale)}`,
         );
       }
       if (order.mileage) {
-        doc.text(`Kilometraje: ${order.mileage}`);
+        doc.text(`${t('fields.mileage')}: ${order.mileage}`);
       }
       doc.moveDown();
 
       // Customer
-      doc.font('Helvetica-Bold').text('Cliente');
+      doc.font('Helvetica-Bold').text(t('sections.customer'));
       doc.font('Helvetica');
-      doc.text(`Nombre: ${order.customer.name}`);
-      if (order.customer.phone) doc.text(`Teléfono: ${order.customer.phone}`);
-      if (order.customer.email) doc.text(`Email: ${order.customer.email}`);
+      doc.text(`${t('fields.name')}: ${order.customer.name}`);
+      if (order.customer.phone)
+        doc.text(`${t('fields.phone')}: ${order.customer.phone}`);
+      if (order.customer.email)
+        doc.text(`${t('fields.email')}: ${order.customer.email}`);
       doc.moveDown();
 
       // Vehicle
-      doc.font('Helvetica-Bold').text('Vehículo');
+      doc.font('Helvetica-Bold').text(t('sections.vehicle'));
       doc.font('Helvetica');
-      doc.text(`VIN: ${order.vehicle.vin}`);
-      if (order.vehicle.make) doc.text(`Marca: ${order.vehicle.make}`);
-      if (order.vehicle.model) doc.text(`Modelo: ${order.vehicle.model}`);
-      if (order.vehicle.year) doc.text(`Año: ${order.vehicle.year}`);
-      if (order.vehicle.plate) doc.text(`Placa: ${order.vehicle.plate}`);
+      doc.text(`${t('fields.vin')}: ${order.vehicle.vin}`);
+      if (order.vehicle.make)
+        doc.text(`${t('fields.make')}: ${order.vehicle.make}`);
+      if (order.vehicle.model)
+        doc.text(`${t('fields.model')}: ${order.vehicle.model}`);
+      if (order.vehicle.year)
+        doc.text(`${t('fields.year')}: ${order.vehicle.year}`);
+      if (order.vehicle.plate)
+        doc.text(`${t('fields.plate')}: ${order.vehicle.plate}`);
       doc.moveDown();
 
       // Items table header
-      doc.font('Helvetica-Bold').text('Servicios y Repuestos');
+      doc.font('Helvetica-Bold').text(t('sections.items'));
       doc.moveDown(0.5);
       const tableTop = doc.y;
       const colType = 50;
@@ -226,11 +238,11 @@ export class WorkOrdersService {
       const colSub = 450;
 
       doc.fontSize(10);
-      doc.text('Tipo', colType, tableTop);
-      doc.text('Descripción', colDesc, tableTop);
-      doc.text('Cant.', colQty, tableTop);
-      doc.text('P. Unit.', colPrice, tableTop);
-      doc.text('Subtotal', colSub, tableTop);
+      doc.text(t('table.type'), colType, tableTop);
+      doc.text(t('table.description'), colDesc, tableTop);
+      doc.text(t('table.quantity'), colQty, tableTop);
+      doc.text(t('table.unitPrice'), colPrice, tableTop);
+      doc.text(t('table.subtotal'), colSub, tableTop);
       doc
         .moveTo(50, doc.y + 2)
         .lineTo(560, doc.y + 2)
@@ -256,12 +268,14 @@ export class WorkOrdersService {
       doc
         .font('Helvetica-Bold')
         .fontSize(12)
-        .text(`Total: $${Number(order.cost).toFixed(2)}`, { align: 'right' });
+        .text(`${t('total')}: $${Number(order.cost).toFixed(2)}`, {
+          align: 'right',
+        });
 
       // Notes
       if (order.notes) {
         doc.moveDown();
-        doc.font('Helvetica-Bold').fontSize(11).text('Notas');
+        doc.font('Helvetica-Bold').fontSize(11).text(t('sections.notes'));
         doc.font('Helvetica').fontSize(10).text(order.notes);
       }
 

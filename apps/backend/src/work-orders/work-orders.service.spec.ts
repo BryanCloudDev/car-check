@@ -1,5 +1,6 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
+import { I18nService } from 'nestjs-i18n';
 import { OrderStatus, Prisma } from '../../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { WorkshopScopeService } from '../common/workshop-scope/workshop-scope.service';
@@ -48,6 +49,10 @@ describe('WorkOrdersService.advanceStatus', () => {
         {
           provide: VehiclesService,
           useValue: { findOrCreate: jest.fn() },
+        },
+        {
+          provide: I18nService,
+          useValue: { translate: jest.fn((key: string) => key) },
         },
       ],
     }).compile();
@@ -130,6 +135,10 @@ describe('WorkOrdersService.findAll / findOne', () => {
         { provide: PrismaService, useValue: {} },
         { provide: WorkshopScopeService, useValue: { for: jest.fn() } },
         { provide: VehiclesService, useValue: { findOrCreate: jest.fn() } },
+        {
+          provide: I18nService,
+          useValue: { translate: jest.fn((key: string) => key) },
+        },
       ],
     }).compile();
 
