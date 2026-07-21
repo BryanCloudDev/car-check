@@ -14,5 +14,10 @@
   },
   "nav": {
     "logout": "Sign out"
+  },
+  "language": {
+    "label": "Language",
+    "es": "Spanish",
+    "en": "English"
   }
 }

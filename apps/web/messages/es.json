@@ -14,5 +14,10 @@
   },
   "nav": {
     "logout": "Cerrar sesión"
+  },
+  "language": {
+    "label": "Idioma",
+    "es": "Español",
+    "en": "Inglés"
   }
 }

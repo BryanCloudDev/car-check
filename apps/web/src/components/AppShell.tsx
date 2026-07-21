@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { SidebarNav } from '@/components/SidebarNav';
+import { LanguageSelector } from '@/components/LanguageSelector';
 
 export function AppShell({
   children,
@@ -70,7 +71,8 @@ export function AppShell({
 
         <SidebarNav onNavigate={() => setOpen(false)} />
 
-        <div className="border-t border-gray-700 px-3 py-4">
+        <div className="space-y-2 border-t border-gray-700 px-3 py-4">
+          <LanguageSelector />
           <form action={logout}>
             <button
               type="submit"
