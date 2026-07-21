@@ -1,5 +1,7 @@
 import { cookies } from 'next/headers';
 
+import { getLocale } from '@/i18n/locale';
+
 const API_URL = `${process.env.API_URL ?? 'http://localhost:3001'}/api`;
 
 type ApiErrorBody = {
@@ -36,12 +38,14 @@ export async function apiFetch<T>(
 ): Promise<T> {
   const cookieStore = await cookies();
   const token = cookieStore.get('session')?.value;
+  const locale = await getLocale();
 
   const res = await fetch(`${API_URL}${path}`, {
     ...init,
     cache: 'no-store',
     headers: {
       'Content-Type': 'application/json',
+      'Accept-Language': locale,
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(init?.headers as Record<string, string> | undefined),
     },
