@@ -13,6 +13,12 @@
     "networkError": "Network error. Please try again."
   },
   "nav": {
+    "vehiculos": "Vehicles",
+    "historial": "History",
+    "clientes": "Customers",
+    "ordenes": "Orders",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
     "logout": "Sign out"
   },
   "language": {

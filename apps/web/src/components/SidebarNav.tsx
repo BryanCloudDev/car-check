@@ -2,20 +2,22 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 
 const navLinks = [
-  { href: '/vehiculos', label: 'Vehículos' },
-  { href: '/historial', label: 'Historial' },
-  { href: '/clientes', label: 'Clientes' },
-  { href: '/ordenes', label: 'Órdenes' },
-];
+  { href: '/vehiculos', key: 'vehiculos' },
+  { href: '/historial', key: 'historial' },
+  { href: '/clientes', key: 'clientes' },
+  { href: '/ordenes', key: 'ordenes' },
+] as const;
 
 export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
+  const t = useTranslations('nav');
 
   return (
     <nav className="flex-1 px-3 py-4 space-y-1">
-      {navLinks.map(({ href, label }) => {
+      {navLinks.map(({ href, key }) => {
         const active = pathname === href || pathname.startsWith(`${href}/`);
         return (
           <Link
@@ -29,7 +31,7 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
                 : 'text-gray-300 hover:bg-gray-800 hover:text-white'
             }`}
           >
-            {label}
+            {t(key)}
           </Link>
         );
       })}

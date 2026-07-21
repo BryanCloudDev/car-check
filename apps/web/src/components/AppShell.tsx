@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { SidebarNav } from '@/components/SidebarNav';
 import { LanguageSelector } from '@/components/LanguageSelector';
 
@@ -12,6 +13,7 @@ export function AppShell({
   logout: () => Promise<void>;
 }) {
   const [open, setOpen] = useState(false);
+  const t = useTranslations();
 
   return (
     <div className="flex min-h-screen flex-col lg:flex-row">
@@ -20,7 +22,7 @@ export function AppShell({
         <button
           type="button"
           onClick={() => setOpen(true)}
-          aria-label="Abrir menú"
+          aria-label={t('nav.openMenu')}
           aria-expanded={open}
           className="-ml-1 rounded-lg p-1.5 text-gray-300 transition-colors hover:bg-gray-800 hover:text-white"
         >
@@ -39,7 +41,9 @@ export function AppShell({
             <line x1="3" y1="18" x2="21" y2="18" />
           </svg>
         </button>
-        <span className="text-lg font-bold tracking-tight">Car Check</span>
+        <span className="text-lg font-bold tracking-tight">
+          {t('common.appName')}
+        </span>
       </header>
 
       {/* Backdrop del drawer — solo móvil */}
@@ -58,11 +62,13 @@ export function AppShell({
         }`}
       >
         <div className="flex items-center justify-between border-b border-gray-700 px-6 py-5">
-          <span className="text-lg font-bold tracking-tight">Car Check</span>
+          <span className="text-lg font-bold tracking-tight">
+            {t('common.appName')}
+          </span>
           <button
             type="button"
             onClick={() => setOpen(false)}
-            aria-label="Cerrar menú"
+            aria-label={t('nav.closeMenu')}
             className="-mr-1 rounded-lg p-1 text-2xl leading-none text-gray-400 transition-colors hover:bg-gray-800 hover:text-white lg:hidden"
           >
             ×
@@ -78,7 +84,7 @@ export function AppShell({
               type="submit"
               className="w-full rounded-lg px-3 py-2 text-left text-sm text-gray-400 transition-colors hover:bg-gray-800 hover:text-white"
             >
-              Cerrar sesión
+              {t('nav.logout')}
             </button>
           </form>
         </div>

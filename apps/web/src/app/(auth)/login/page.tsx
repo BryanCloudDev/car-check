@@ -2,9 +2,11 @@
 
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 
 export default function LoginPage() {
   const router = useRouter();
+  const t = useTranslations('auth');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -28,14 +30,14 @@ export default function LoginPage() {
         const data = await res.json().catch(() => ({}));
         const message = (data as { message?: string | string[] }).message;
         const text = Array.isArray(message) ? message[0] : message;
-        setError(text ?? 'Credenciales incorrectas');
+        setError(text ?? t('invalidCredentials'));
         return;
       }
 
       router.push('/vehiculos');
       router.refresh();
     } catch {
-      setError('Error de red. Intenta de nuevo.');
+      setError(t('networkError'));
     } finally {
       setLoading(false);
     }
@@ -45,7 +47,7 @@ export default function LoginPage() {
     <main className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="w-full max-w-sm bg-white rounded-2xl shadow-md p-8">
         <h1 className="text-2xl font-bold text-gray-900 mb-6 text-center">
-          Car Check
+          {t('title')}
         </h1>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -54,7 +56,7 @@ export default function LoginPage() {
               htmlFor="email"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
-              Correo electrónico
+              {t('email')}
             </label>
             <input
               id="email"
@@ -71,7 +73,7 @@ export default function LoginPage() {
               htmlFor="password"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
-              Contraseña
+              {t('password')}
             </label>
             <input
               id="password"
@@ -94,7 +96,7 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium rounded-lg py-2 text-sm transition-colors"
           >
-            {loading ? 'Ingresando…' : 'Ingresar'}
+            {loading ? t('submitting') : t('submit')}
           </button>
         </form>
       </div>

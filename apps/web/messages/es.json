@@ -13,6 +13,12 @@
     "networkError": "Error de red. Intenta de nuevo."
   },
   "nav": {
+    "vehiculos": "Vehículos",
+    "historial": "Historial",
+    "clientes": "Clientes",
+    "ordenes": "Órdenes",
+    "openMenu": "Abrir menú",
+    "closeMenu": "Cerrar menú",
     "logout": "Cerrar sesión"
   },
   "language": {
