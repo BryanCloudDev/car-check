@@ -1,17 +1,19 @@
 import Link from 'next/link';
+import { getTranslations } from 'next-intl/server';
 import { apiFetch } from '@/lib/api';
 import type { Customer } from '@car-check/shared';
 import { OrderForm } from '../OrderForm';
 import { createOrderAction } from '../actions';
 
 export default async function NuevaOrdenPage() {
+  const t = await getTranslations('ordenes');
   let customers: Customer[] = [];
   let error: string | null = null;
 
   try {
     customers = await apiFetch<Customer[]>('/customers');
   } catch (err) {
-    error = err instanceof Error ? err.message : 'Error al cargar clientes';
+    error = err instanceof Error ? err.message : t('loadCustomersError');
   }
 
   return (
@@ -20,10 +22,10 @@ export default async function NuevaOrdenPage() {
         href="/ordenes"
         className="text-sm text-gray-500 transition-colors hover:text-gray-900"
       >
-        ← Órdenes
+        {t('create.back')}
       </Link>
       <h1 className="mb-6 mt-2 text-2xl font-bold text-gray-900">
-        Nueva orden de trabajo
+        {t('create.title')}
       </h1>
 
       {error ? (
@@ -34,7 +36,7 @@ export default async function NuevaOrdenPage() {
         <OrderForm
           action={createOrderAction}
           customers={customers}
-          submitLabel="Crear orden"
+          submitLabel={t('create.submit')}
           cancelHref="/ordenes"
         />
       )}

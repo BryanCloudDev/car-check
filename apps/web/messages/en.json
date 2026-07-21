@@ -156,5 +156,119 @@
       "SERVICIO": "Service",
       "REPUESTO": "Part"
     }
+  },
+  "ordenes": {
+    "title": "Work orders",
+    "new": "New order",
+    "loadError": "Failed to load orders",
+    "loadCustomersError": "Failed to load customers",
+    "filterAll": "All",
+    "empty": "No orders registered.",
+    "emptyStatus": "No orders with status “{status}”.",
+    "view": "View",
+    "status": {
+      "RECIBIDO": "Received",
+      "EN_PROCESO": "In progress",
+      "LISTO": "Ready",
+      "ENTREGADO": "Delivered"
+    },
+    "columns": {
+      "status": "Status",
+      "customer": "Customer",
+      "vehicle": "Vehicle",
+      "date": "Date",
+      "total": "Total",
+      "actions": "Actions"
+    },
+    "itemColumns": {
+      "description": "Description",
+      "type": "Type",
+      "quantity": "Qty.",
+      "unitPrice": "Unit price",
+      "subtotal": "Subtotal"
+    },
+    "itemType": {
+      "SERVICIO": "Service",
+      "REPUESTO": "Part"
+    },
+    "create": {
+      "back": "← Orders",
+      "title": "New work order",
+      "submit": "Create order"
+    },
+    "detail": {
+      "back": "← Orders",
+      "orderLabel": "Order",
+      "edit": "Edit",
+      "downloadPdf": "Download PDF",
+      "customer": "Customer",
+      "vehicle": "Vehicle",
+      "vehicleFallback": "Vehicle",
+      "plateLabel": "Plate: {plate}",
+      "serviceDate": "Service date",
+      "mileage": "Mileage",
+      "total": "Total",
+      "notes": "Notes",
+      "itemsTitle": "Items ({count})",
+      "noItems": "This order has no items.",
+      "statusTitle": "Status",
+      "mediaTitle": "Photos and videos"
+    },
+    "edit": {
+      "back": "← Back to order",
+      "title": "Edit order",
+      "submit": "Save changes"
+    },
+    "form": {
+      "customer": "Customer",
+      "customerPlaceholder": "Select a customer…",
+      "noCustomers": "No customers registered. Create one before opening an order.",
+      "vin": "Vehicle VIN",
+      "vinHint": "If the VIN doesn't exist, the vehicle is registered automatically.",
+      "plate": "Plate",
+      "make": "Make",
+      "model": "Model",
+      "year": "Year",
+      "mileage": "Mileage",
+      "serviceDate": "Service date",
+      "notes": "Notes",
+      "notesPlaceholder": "Order remarks…",
+      "itemsTitle": "Items (services and parts)",
+      "addItem": "+ Add item",
+      "itemType": "Type",
+      "itemTypeService": "Service",
+      "itemTypePart": "Part",
+      "itemDescription": "Description",
+      "itemDescriptionPlaceholder": "Oil change 5W-30",
+      "itemQuantity": "Qty.",
+      "itemUnitPrice": "Unit price",
+      "removeItem": "Remove item",
+      "totalEstimated": "Estimated total:",
+      "cancel": "Cancel",
+      "saving": "Saving…"
+    },
+    "statusActions": {
+      "updating": "Updating…",
+      "markAs": "Mark as {status}",
+      "noTransitions": "The order is {status}. No further transitions available."
+    },
+    "errors": {
+      "itemNeedsDescription": "Each item needs a description.",
+      "invalidItemType": "Invalid item type.",
+      "quantityMin": "The quantity for “{description}” must be an integer ≥ 1.",
+      "priceMin": "The price for “{description}” must be a number ≥ 0.",
+      "atLeastOneItem": "Add at least one item to the order.",
+      "mileageInvalid": "Mileage must be a positive integer.",
+      "selectCustomer": "Select a customer.",
+      "vinInvalid": "The VIN must be 17 alphanumeric characters (no I, O, Q).",
+      "yearRange": "The year must be between 1885 and {max}.",
+      "customerNotFound": "The selected customer does not exist.",
+      "invalidData": "Invalid data. Review the fields and try again.",
+      "createFailed": "Could not create the order. Try again.",
+      "notFound": "The order no longer exists.",
+      "updateFailed": "Could not update the order. Try again.",
+      "invalidTransition": "Status transition not allowed.",
+      "statusChangeFailed": "Could not change the status. Try again."
+    }
   }
 }

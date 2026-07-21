@@ -156,5 +156,119 @@
       "SERVICIO": "Servicio",
       "REPUESTO": "Repuesto"
     }
+  },
+  "ordenes": {
+    "title": "Órdenes de trabajo",
+    "new": "Nueva orden",
+    "loadError": "Error al cargar órdenes",
+    "loadCustomersError": "Error al cargar clientes",
+    "filterAll": "Todas",
+    "empty": "No hay órdenes registradas.",
+    "emptyStatus": "No hay órdenes en estado “{status}”.",
+    "view": "Ver",
+    "status": {
+      "RECIBIDO": "Recibido",
+      "EN_PROCESO": "En proceso",
+      "LISTO": "Listo",
+      "ENTREGADO": "Entregado"
+    },
+    "columns": {
+      "status": "Estado",
+      "customer": "Cliente",
+      "vehicle": "Vehículo",
+      "date": "Fecha",
+      "total": "Total",
+      "actions": "Acciones"
+    },
+    "itemColumns": {
+      "description": "Descripción",
+      "type": "Tipo",
+      "quantity": "Cant.",
+      "unitPrice": "P. unit.",
+      "subtotal": "Subtotal"
+    },
+    "itemType": {
+      "SERVICIO": "Servicio",
+      "REPUESTO": "Repuesto"
+    },
+    "create": {
+      "back": "← Órdenes",
+      "title": "Nueva orden de trabajo",
+      "submit": "Crear orden"
+    },
+    "detail": {
+      "back": "← Órdenes",
+      "orderLabel": "Orden",
+      "edit": "Editar",
+      "downloadPdf": "Descargar PDF",
+      "customer": "Cliente",
+      "vehicle": "Vehículo",
+      "vehicleFallback": "Vehículo",
+      "plateLabel": "Placa: {plate}",
+      "serviceDate": "Fecha de servicio",
+      "mileage": "Kilometraje",
+      "total": "Total",
+      "notes": "Notas",
+      "itemsTitle": "Ítems ({count})",
+      "noItems": "Esta orden no tiene ítems.",
+      "statusTitle": "Estado",
+      "mediaTitle": "Fotos y videos"
+    },
+    "edit": {
+      "back": "← Volver a la orden",
+      "title": "Editar orden",
+      "submit": "Guardar cambios"
+    },
+    "form": {
+      "customer": "Cliente",
+      "customerPlaceholder": "Seleccioná un cliente…",
+      "noCustomers": "No hay clientes registrados. Creá uno antes de abrir una orden.",
+      "vin": "VIN del vehículo",
+      "vinHint": "Si el VIN no existe, se registra el vehículo automáticamente.",
+      "plate": "Placa",
+      "make": "Marca",
+      "model": "Modelo",
+      "year": "Año",
+      "mileage": "Kilometraje",
+      "serviceDate": "Fecha de servicio",
+      "notes": "Notas",
+      "notesPlaceholder": "Observaciones de la orden…",
+      "itemsTitle": "Ítems (servicios y repuestos)",
+      "addItem": "+ Agregar ítem",
+      "itemType": "Tipo",
+      "itemTypeService": "Servicio",
+      "itemTypePart": "Repuesto",
+      "itemDescription": "Descripción",
+      "itemDescriptionPlaceholder": "Cambio de aceite 5W-30",
+      "itemQuantity": "Cant.",
+      "itemUnitPrice": "P. unit.",
+      "removeItem": "Quitar ítem",
+      "totalEstimated": "Total estimado:",
+      "cancel": "Cancelar",
+      "saving": "Guardando…"
+    },
+    "statusActions": {
+      "updating": "Actualizando…",
+      "markAs": "Marcar como {status}",
+      "noTransitions": "La orden está {status}. No hay más transiciones disponibles."
+    },
+    "errors": {
+      "itemNeedsDescription": "Cada ítem necesita una descripción.",
+      "invalidItemType": "Tipo de ítem inválido.",
+      "quantityMin": "La cantidad de “{description}” debe ser un entero ≥ 1.",
+      "priceMin": "El precio de “{description}” debe ser un número ≥ 0.",
+      "atLeastOneItem": "Agregá al menos un ítem a la orden.",
+      "mileageInvalid": "El kilometraje debe ser un número entero positivo.",
+      "selectCustomer": "Seleccioná un cliente.",
+      "vinInvalid": "El VIN debe tener 17 caracteres alfanuméricos (sin I, O, Q).",
+      "yearRange": "El año debe estar entre 1885 y {max}.",
+      "customerNotFound": "El cliente seleccionado no existe.",
+      "invalidData": "Datos inválidos. Revisá los campos e intentá de nuevo.",
+      "createFailed": "No se pudo crear la orden. Intentá de nuevo.",
+      "notFound": "La orden ya no existe.",
+      "updateFailed": "No se pudo actualizar la orden. Intentá de nuevo.",
+      "invalidTransition": "Transición de estado no permitida.",
+      "statusChangeFailed": "No se pudo cambiar el estado. Intentá de nuevo."
+    }
   }
 }

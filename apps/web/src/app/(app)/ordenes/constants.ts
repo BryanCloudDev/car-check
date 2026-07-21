@@ -1,12 +1,5 @@
 import type { OrderStatus } from '@car-check/shared';
 
-export const STATUS_LABELS: Record<OrderStatus, string> = {
-  RECIBIDO: 'Recibido',
-  EN_PROCESO: 'En proceso',
-  LISTO: 'Listo',
-  ENTREGADO: 'Entregado',
-};
-
 export const STATUS_STYLES: Record<OrderStatus, string> = {
   RECIBIDO: 'bg-gray-100 text-gray-700',
   EN_PROCESO: 'bg-amber-100 text-amber-700',

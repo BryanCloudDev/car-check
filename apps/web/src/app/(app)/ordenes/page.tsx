@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { getTranslations } from 'next-intl/server';
 import { apiFetch } from '@/lib/api';
 import type {
   Customer,
@@ -7,7 +8,7 @@ import type {
   Vehicle,
   WorkOrder,
 } from '@car-check/shared';
-import { ORDER_STATUSES, STATUS_LABELS, STATUS_STYLES } from './constants';
+import { ORDER_STATUSES, STATUS_STYLES } from './constants';
 
 type OrderWithRelations = WorkOrder & {
   items: OrderItem[];
@@ -37,6 +38,7 @@ export default async function OrdenesPage({
 }: {
   searchParams: Promise<{ status?: string }>;
 }) {
+  const t = await getTranslations('ordenes');
   const { status: rawStatus } = await searchParams;
   const status = rawStatus && isOrderStatus(rawStatus) ? rawStatus : undefined;
 
@@ -47,18 +49,18 @@ export default async function OrdenesPage({
     const path = status ? `/work-orders?status=${status}` : '/work-orders';
     orders = await apiFetch<OrderWithRelations[]>(path);
   } catch (err) {
-    error = err instanceof Error ? err.message : 'Error al cargar órdenes';
+    error = err instanceof Error ? err.message : t('loadError');
   }
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold text-gray-900">Órdenes de trabajo</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{t('title')}</h1>
         <Link
           href="/ordenes/nueva"
           className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-800"
         >
-          Nueva orden
+          {t('new')}
         </Link>
       </div>
 
@@ -72,7 +74,7 @@ export default async function OrdenesPage({
               : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
           }`}
         >
-          Todas
+          {t('filterAll')}
         </Link>
         {ORDER_STATUSES.map((s) => (
           <Link
@@ -84,7 +86,7 @@ export default async function OrdenesPage({
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
-            {STATUS_LABELS[s]}
+            {t(`status.${s}`)}
           </Link>
         ))}
       </div>
@@ -98,8 +100,8 @@ export default async function OrdenesPage({
       {!error && orders.length === 0 && (
         <p className="text-sm text-gray-500">
           {status
-            ? `No hay órdenes en estado "${STATUS_LABELS[status]}".`
-            : 'No hay órdenes registradas.'}
+            ? t('emptyStatus', { status: t(`status.${status}`) })
+            : t('empty')}
         </p>
       )}
 
@@ -108,12 +110,12 @@ export default async function OrdenesPage({
           <table className="w-full min-w-[44rem] text-sm">
             <thead className="bg-gray-50 text-gray-600 uppercase text-xs tracking-wide">
               <tr>
-                <th className="px-4 py-3 text-left">Estado</th>
-                <th className="px-4 py-3 text-left">Cliente</th>
-                <th className="px-4 py-3 text-left">Vehículo</th>
-                <th className="px-4 py-3 text-left">Fecha</th>
-                <th className="px-4 py-3 text-right">Total</th>
-                <th className="px-4 py-3 text-right">Acciones</th>
+                <th className="px-4 py-3 text-left">{t('columns.status')}</th>
+                <th className="px-4 py-3 text-left">{t('columns.customer')}</th>
+                <th className="px-4 py-3 text-left">{t('columns.vehicle')}</th>
+                <th className="px-4 py-3 text-left">{t('columns.date')}</th>
+                <th className="px-4 py-3 text-right">{t('columns.total')}</th>
+                <th className="px-4 py-3 text-right">{t('columns.actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -126,7 +128,7 @@ export default async function OrdenesPage({
                     <span
                       className={`rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_STYLES[order.status]}`}
                     >
-                      {STATUS_LABELS[order.status]}
+                      {t(`status.${order.status}`)}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-gray-800">
@@ -153,7 +155,7 @@ export default async function OrdenesPage({
                       href={`/ordenes/${order.id}`}
                       className="font-medium text-gray-700 transition-colors hover:text-gray-900"
                     >
-                      Ver
+                      {t('view')}
                     </Link>
                   </td>
                 </tr>

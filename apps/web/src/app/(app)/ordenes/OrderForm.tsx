@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useActionState, useState } from 'react';
 import { useFormStatus } from 'react-dom';
+import { useTranslations } from 'next-intl';
 import type {
   Customer,
   OrderItem,
@@ -61,13 +62,14 @@ function FieldError({ message }: { message?: string }) {
 
 function SubmitButton({ label }: { label: string }) {
   const { pending } = useFormStatus();
+  const t = useTranslations('ordenes.form');
   return (
     <button
       type="submit"
       disabled={pending}
       className="rounded-lg bg-gray-900 px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60"
     >
-      {pending ? 'Guardando…' : label}
+      {pending ? t('saving') : label}
     </button>
   );
 }
@@ -85,6 +87,7 @@ export function OrderForm({
   submitLabel: string;
   cancelHref: string;
 }) {
+  const t = useTranslations('ordenes.form');
   const [state, formAction] = useActionState<OrderFormState, FormData>(
     action,
     {},
@@ -134,7 +137,7 @@ export function OrderForm({
         <section className="space-y-5">
           <div>
             <label htmlFor="customerId" className={labelClass}>
-              Cliente
+              {t('customer')}
             </label>
             <select
               id="customerId"
@@ -144,7 +147,7 @@ export function OrderForm({
               aria-invalid={Boolean(fieldErrors.customerId)}
             >
               <option value="" disabled>
-                Seleccioná un cliente…
+                {t('customerPlaceholder')}
               </option>
               {customers?.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -155,15 +158,13 @@ export function OrderForm({
             </select>
             <FieldError message={fieldErrors.customerId} />
             {customers && customers.length === 0 && (
-              <p className="mt-1 text-xs text-amber-600">
-                No hay clientes registrados. Creá uno antes de abrir una orden.
-              </p>
+              <p className="mt-1 text-xs text-amber-600">{t('noCustomers')}</p>
             )}
           </div>
 
           <div>
             <label htmlFor="vin" className={labelClass}>
-              VIN del vehículo
+              {t('vin')}
             </label>
             <input
               id="vin"
@@ -175,16 +176,14 @@ export function OrderForm({
               className={`${inputClass} font-mono uppercase placeholder:font-sans placeholder:normal-case`}
               aria-invalid={Boolean(fieldErrors.vin)}
             />
-            <p className="mt-1 text-xs text-gray-400">
-              Si el VIN no existe, se registra el vehículo automáticamente.
-            </p>
+            <p className="mt-1 text-xs text-gray-400">{t('vinHint')}</p>
             <FieldError message={fieldErrors.vin} />
           </div>
 
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
             <div>
               <label htmlFor="plate" className={labelClass}>
-                Placa
+                {t('plate')}
               </label>
               <input
                 id="plate"
@@ -196,7 +195,7 @@ export function OrderForm({
             </div>
             <div>
               <label htmlFor="make" className={labelClass}>
-                Marca
+                {t('make')}
               </label>
               <input
                 id="make"
@@ -208,7 +207,7 @@ export function OrderForm({
             </div>
             <div>
               <label htmlFor="model" className={labelClass}>
-                Modelo
+                {t('model')}
               </label>
               <input
                 id="model"
@@ -220,7 +219,7 @@ export function OrderForm({
             </div>
             <div>
               <label htmlFor="year" className={labelClass}>
-                Año
+                {t('year')}
               </label>
               <input
                 id="year"
@@ -240,7 +239,7 @@ export function OrderForm({
       <section className="grid grid-cols-1 gap-5 sm:grid-cols-3">
         <div>
           <label htmlFor="mileage" className={labelClass}>
-            Kilometraje
+            {t('mileage')}
           </label>
           <input
             id="mileage"
@@ -256,7 +255,7 @@ export function OrderForm({
         </div>
         <div>
           <label htmlFor="serviceDate" className={labelClass}>
-            Fecha de servicio
+            {t('serviceDate')}
           </label>
           <input
             id="serviceDate"
@@ -272,13 +271,13 @@ export function OrderForm({
 
       <div>
         <label htmlFor="notes" className={labelClass}>
-          Notas
+          {t('notes')}
         </label>
         <textarea
           id="notes"
           name="notes"
           rows={2}
-          placeholder="Observaciones de la orden…"
+          placeholder={t('notesPlaceholder')}
           defaultValue={order?.notes ?? ''}
           className={inputClass}
         />
@@ -288,14 +287,14 @@ export function OrderForm({
       <section className="space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-600">
-            Ítems (servicios y repuestos)
+            {t('itemsTitle')}
           </h2>
           <button
             type="button"
             onClick={addRow}
             className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100"
           >
-            + Agregar ítem
+            {t('addItem')}
           </button>
         </div>
 
@@ -308,7 +307,7 @@ export function OrderForm({
               className="grid grid-cols-1 items-end gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3 sm:grid-cols-[8rem_1fr_5rem_7rem_auto]"
             >
               <div>
-                <label className={labelClass}>Tipo</label>
+                <label className={labelClass}>{t('itemType')}</label>
                 <select
                   name="itemType"
                   value={row.type}
@@ -319,12 +318,12 @@ export function OrderForm({
                   }
                   className={inputClass}
                 >
-                  <option value="SERVICIO">Servicio</option>
-                  <option value="REPUESTO">Repuesto</option>
+                  <option value="SERVICIO">{t('itemTypeService')}</option>
+                  <option value="REPUESTO">{t('itemTypePart')}</option>
                 </select>
               </div>
               <div>
-                <label className={labelClass}>Descripción</label>
+                <label className={labelClass}>{t('itemDescription')}</label>
                 <input
                   name="itemDescription"
                   type="text"
@@ -332,12 +331,12 @@ export function OrderForm({
                   onChange={(e) =>
                     updateRow(row.key, { description: e.target.value })
                   }
-                  placeholder="Cambio de aceite 5W-30"
+                  placeholder={t('itemDescriptionPlaceholder')}
                   className={inputClass}
                 />
               </div>
               <div>
-                <label className={labelClass}>Cant.</label>
+                <label className={labelClass}>{t('itemQuantity')}</label>
                 <input
                   name="itemQuantity"
                   type="number"
@@ -352,7 +351,7 @@ export function OrderForm({
                 />
               </div>
               <div>
-                <label className={labelClass}>P. unit.</label>
+                <label className={labelClass}>{t('itemUnitPrice')}</label>
                 <input
                   name="itemUnitPrice"
                   type="number"
@@ -371,7 +370,7 @@ export function OrderForm({
                 type="button"
                 onClick={() => removeRow(row.key)}
                 disabled={rows.length === 1}
-                aria-label="Quitar ítem"
+                aria-label={t('removeItem')}
                 className="rounded-lg px-3 py-2 text-sm font-medium text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 ×
@@ -381,7 +380,7 @@ export function OrderForm({
         </div>
 
         <div className="flex justify-end pt-1 text-sm">
-          <span className="text-gray-500">Total estimado:&nbsp;</span>
+          <span className="text-gray-500">{t('totalEstimated')}&nbsp;</span>
           <span className="font-semibold text-gray-900">
             {currency.format(total)}
           </span>
@@ -394,7 +393,7 @@ export function OrderForm({
           href={cancelHref}
           className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900"
         >
-          Cancelar
+          {t('cancel')}
         </Link>
       </div>
     </form>

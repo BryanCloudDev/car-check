@@ -2,8 +2,14 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import { ApiError, apiFetch } from '@/lib/api';
 import type { OrderItemType, OrderStatus, WorkOrder } from '@car-check/shared';
+
+type Translator = (
+  key: string,
+  values?: Record<string, string | number>,
+) => string;
 
 const VIN_REGEX = /^[A-HJ-NPR-Z0-9]{17}$/;
 const ITEM_TYPES: OrderItemType[] = ['SERVICIO', 'REPUESTO'];
@@ -29,7 +35,7 @@ type ParsedItems = {
   error?: string;
 };
 
-function parseItems(formData: FormData): ParsedItems {
+function parseItems(formData: FormData, t: Translator): ParsedItems {
   const types = formData.getAll('itemType').map(String);
   const descriptions = formData.getAll('itemDescription').map(String);
   const quantities = formData.getAll('itemQuantity').map(String);
@@ -46,17 +52,17 @@ function parseItems(formData: FormData): ParsedItems {
     if (!description && !rawQty && !rawPrice) continue;
 
     if (!description) {
-      return { items: [], error: 'Cada ítem necesita una descripción.' };
+      return { items: [], error: t('itemNeedsDescription') };
     }
     if (!ITEM_TYPES.includes(type)) {
-      return { items: [], error: 'Tipo de ítem inválido.' };
+      return { items: [], error: t('invalidItemType') };
     }
 
     const quantity = rawQty ? Number(rawQty) : 1;
     if (!Number.isInteger(quantity) || quantity < 1) {
       return {
         items: [],
-        error: `La cantidad de "${description}" debe ser un entero ≥ 1.`,
+        error: t('quantityMin', { description }),
       };
     }
 
@@ -64,7 +70,7 @@ function parseItems(formData: FormData): ParsedItems {
     if (!Number.isFinite(unitPrice) || unitPrice < 0) {
       return {
         items: [],
-        error: `El precio de "${description}" debe ser un número ≥ 0.`,
+        error: t('priceMin', { description }),
       };
     }
 
@@ -72,7 +78,7 @@ function parseItems(formData: FormData): ParsedItems {
   }
 
   if (items.length === 0) {
-    return { items: [], error: 'Agregá al menos un ítem a la orden.' };
+    return { items: [], error: t('atLeastOneItem') };
   }
 
   return { items };
@@ -83,7 +89,10 @@ type OptionalFields = {
   errors: Record<string, string>;
 };
 
-function parseOptionalFields(formData: FormData): OptionalFields {
+function parseOptionalFields(
+  formData: FormData,
+  t: Translator,
+): OptionalFields {
   const values: OptionalFields['values'] = {};
   const errors: Record<string, string> = {};
 
@@ -91,7 +100,7 @@ function parseOptionalFields(formData: FormData): OptionalFields {
   if (mileageRaw) {
     const mileage = Number(mileageRaw);
     if (!Number.isInteger(mileage) || mileage < 0) {
-      errors.mileage = 'El kilometraje debe ser un número entero positivo.';
+      errors.mileage = t('mileageInvalid');
     } else {
       values.mileage = mileage;
     }
@@ -110,18 +119,19 @@ export async function createOrderAction(
   _prev: OrderFormState,
   formData: FormData,
 ): Promise<OrderFormState> {
+  const t = await getTranslations('ordenes.errors');
   const customerId = String(formData.get('customerId') ?? '').trim();
   const vin = String(formData.get('vin') ?? '')
     .trim()
     .toUpperCase();
 
-  const { values, errors } = parseOptionalFields(formData);
+  const { values, errors } = parseOptionalFields(formData, t);
 
   if (!customerId) {
-    errors.customerId = 'Seleccioná un cliente.';
+    errors.customerId = t('selectCustomer');
   }
   if (!VIN_REGEX.test(vin)) {
-    errors.vin = 'El VIN debe tener 17 caracteres alfanuméricos (sin I, O, Q).';
+    errors.vin = t('vinInvalid');
   }
 
   const vehicleFields: Record<string, string | number> = {};
@@ -134,13 +144,13 @@ export async function createOrderAction(
     const year = Number(yearRaw);
     const maxYear = new Date().getFullYear() + 1;
     if (!Number.isInteger(year) || year < 1885 || year > maxYear) {
-      errors.year = `El año debe estar entre 1885 y ${maxYear}.`;
+      errors.year = t('yearRange', { max: maxYear });
     } else {
       vehicleFields.year = year;
     }
   }
 
-  const { items, error: itemsError } = parseItems(formData);
+  const { items, error: itemsError } = parseItems(formData, t);
   if (itemsError) errors.items = itemsError;
 
   if (Object.keys(errors).length > 0) {
@@ -161,17 +171,15 @@ export async function createOrderAction(
   } catch (err) {
     if (err instanceof ApiError && err.status === 404) {
       return {
-        fieldErrors: { customerId: 'El cliente seleccionado no existe.' },
+        fieldErrors: { customerId: t('customerNotFound') },
       };
     }
     if (err instanceof ApiError && err.status === 400) {
       return {
-        error:
-          err.firstMessage ??
-          'Datos inválidos. Revisá los campos e intentá de nuevo.',
+        error: err.firstMessage ?? t('invalidData'),
       };
     }
-    return { error: 'No se pudo crear la orden. Intentá de nuevo.' };
+    return { error: t('createFailed') };
   }
 
   revalidatePath('/ordenes');
@@ -183,8 +191,9 @@ export async function updateOrderAction(
   _prev: OrderFormState,
   formData: FormData,
 ): Promise<OrderFormState> {
-  const { values, errors } = parseOptionalFields(formData);
-  const { items, error: itemsError } = parseItems(formData);
+  const t = await getTranslations('ordenes.errors');
+  const { values, errors } = parseOptionalFields(formData, t);
+  const { items, error: itemsError } = parseItems(formData, t);
   if (itemsError) errors.items = itemsError;
 
   if (Object.keys(errors).length > 0) {
@@ -198,16 +207,14 @@ export async function updateOrderAction(
     });
   } catch (err) {
     if (err instanceof ApiError && err.status === 404) {
-      return { error: 'La orden ya no existe.' };
+      return { error: t('notFound') };
     }
     if (err instanceof ApiError && err.status === 400) {
       return {
-        error:
-          err.firstMessage ??
-          'Datos inválidos. Revisá los campos e intentá de nuevo.',
+        error: err.firstMessage ?? t('invalidData'),
       };
     }
-    return { error: 'No se pudo actualizar la orden. Intentá de nuevo.' };
+    return { error: t('updateFailed') };
   }
 
   revalidatePath('/ordenes');
@@ -219,6 +226,7 @@ export async function advanceStatusAction(
   _prev: StatusActionState,
   formData: FormData,
 ): Promise<StatusActionState> {
+  const t = await getTranslations('ordenes.errors');
   const id = String(formData.get('id') ?? '');
   const status = String(formData.get('status') ?? '') as OrderStatus;
 
@@ -229,12 +237,12 @@ export async function advanceStatusAction(
     });
   } catch (err) {
     if (err instanceof ApiError && err.status === 400) {
-      return { error: 'Transición de estado no permitida.' };
+      return { error: t('invalidTransition') };
     }
     if (err instanceof ApiError && err.status === 404) {
-      return { error: 'La orden ya no existe.' };
+      return { error: t('notFound') };
     }
-    return { error: 'No se pudo cambiar el estado. Intentá de nuevo.' };
+    return { error: t('statusChangeFailed') };
   }
 
   revalidatePath('/ordenes');

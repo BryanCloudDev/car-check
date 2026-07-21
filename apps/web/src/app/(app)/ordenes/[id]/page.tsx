@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import { ApiError, apiFetch } from '@/lib/api';
 import { MediaSection } from '@/components/MediaSection';
 import type {
@@ -8,7 +9,7 @@ import type {
   Vehicle,
   WorkOrder,
 } from '@car-check/shared';
-import { STATUS_LABELS, STATUS_STYLES } from '../constants';
+import { STATUS_STYLES } from '../constants';
 import { StatusActions } from './StatusActions';
 
 type OrderWithRelations = WorkOrder & {
@@ -41,6 +42,7 @@ export default async function OrdenDetallePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const t = await getTranslations('ordenes');
 
   let order: OrderWithRelations;
   try {
@@ -58,13 +60,13 @@ export default async function OrdenDetallePage({
         href="/ordenes"
         className="text-sm text-gray-500 transition-colors hover:text-gray-900"
       >
-        ← Órdenes
+        {t('detail.back')}
       </Link>
 
       <div className="mb-6 mt-2 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-bold text-gray-900">
-            Orden{' '}
+            {t('detail.orderLabel')}{' '}
             <span className="font-mono text-gray-500">
               {order.id.slice(0, 8).toUpperCase()}
             </span>
@@ -72,7 +74,7 @@ export default async function OrdenDetallePage({
           <span
             className={`rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_STYLES[order.status]}`}
           >
-            {STATUS_LABELS[order.status]}
+            {t(`status.${order.status}`)}
           </span>
         </div>
         <div className="flex items-center gap-3">
@@ -80,13 +82,13 @@ export default async function OrdenDetallePage({
             href={`/ordenes/${order.id}/editar`}
             className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100"
           >
-            Editar
+            {t('detail.edit')}
           </Link>
           <a
             href={`/api/work-orders/${order.id}/receipt`}
             className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100"
           >
-            Descargar PDF
+            {t('detail.downloadPdf')}
           </a>
         </div>
       </div>
@@ -95,7 +97,7 @@ export default async function OrdenDetallePage({
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="rounded-xl border border-gray-200 bg-white p-5">
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-600">
-            Cliente
+            {t('detail.customer')}
           </h2>
           <p className="text-gray-900">{order.customer.name}</p>
           {order.customer.phone && (
@@ -107,17 +109,17 @@ export default async function OrdenDetallePage({
         </div>
         <div className="rounded-xl border border-gray-200 bg-white p-5">
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-600">
-            Vehículo
+            {t('detail.vehicle')}
           </h2>
           <p className="text-gray-900">
             {[order.vehicle.make, order.vehicle.model, order.vehicle.year]
               .filter(Boolean)
-              .join(' ') || 'Vehículo'}
+              .join(' ') || t('detail.vehicleFallback')}
           </p>
           <p className="font-mono text-sm text-gray-500">{order.vehicle.vin}</p>
           {order.vehicle.plate && (
             <p className="text-sm text-gray-500">
-              Placa: {order.vehicle.plate}
+              {t('detail.plateLabel', { plate: order.vehicle.plate })}
             </p>
           )}
         </div>
@@ -126,11 +128,11 @@ export default async function OrdenDetallePage({
       {/* Datos de la orden */}
       <dl className="mb-6 grid grid-cols-2 gap-x-8 gap-y-3 rounded-xl border border-gray-200 bg-white p-5 text-sm sm:grid-cols-4">
         <div>
-          <dt className="text-gray-500">Fecha de servicio</dt>
+          <dt className="text-gray-500">{t('detail.serviceDate')}</dt>
           <dd className="text-gray-900">{formatDate(order.serviceDate)}</dd>
         </div>
         <div>
-          <dt className="text-gray-500">Kilometraje</dt>
+          <dt className="text-gray-500">{t('detail.mileage')}</dt>
           <dd className="text-gray-900">
             {order.mileage != null
               ? `${order.mileage.toLocaleString()} km`
@@ -138,7 +140,7 @@ export default async function OrdenDetallePage({
           </dd>
         </div>
         <div>
-          <dt className="text-gray-500">Total</dt>
+          <dt className="text-gray-500">{t('detail.total')}</dt>
           <dd className="font-semibold text-gray-900">
             {formatMoney(order.cost)}
           </dd>
@@ -148,7 +150,7 @@ export default async function OrdenDetallePage({
       {order.notes && (
         <div className="mb-6 rounded-xl border border-gray-200 bg-white p-5">
           <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-600">
-            Notas
+            {t('detail.notes')}
           </h2>
           <p className="text-sm text-gray-700">{order.notes}</p>
         </div>
@@ -156,20 +158,28 @@ export default async function OrdenDetallePage({
 
       {/* Ítems */}
       <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-600">
-        Ítems ({order.items.length})
+        {t('detail.itemsTitle', { count: order.items.length })}
       </h2>
       {order.items.length === 0 ? (
-        <p className="mb-6 text-sm text-gray-500">Esta orden no tiene ítems.</p>
+        <p className="mb-6 text-sm text-gray-500">{t('detail.noItems')}</p>
       ) : (
         <div className="mb-6 overflow-x-auto rounded-xl border border-gray-200 bg-white">
           <table className="w-full min-w-[36rem] text-sm">
             <thead className="bg-gray-50 text-gray-500 uppercase text-xs tracking-wide">
               <tr>
-                <th className="px-4 py-2 text-left">Descripción</th>
-                <th className="px-4 py-2 text-left">Tipo</th>
-                <th className="px-4 py-2 text-right">Cant.</th>
-                <th className="px-4 py-2 text-right">P. unit.</th>
-                <th className="px-4 py-2 text-right">Subtotal</th>
+                <th className="px-4 py-2 text-left">
+                  {t('itemColumns.description')}
+                </th>
+                <th className="px-4 py-2 text-left">{t('itemColumns.type')}</th>
+                <th className="px-4 py-2 text-right">
+                  {t('itemColumns.quantity')}
+                </th>
+                <th className="px-4 py-2 text-right">
+                  {t('itemColumns.unitPrice')}
+                </th>
+                <th className="px-4 py-2 text-right">
+                  {t('itemColumns.subtotal')}
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -179,7 +189,7 @@ export default async function OrdenDetallePage({
                     {item.description}
                   </td>
                   <td className="px-4 py-2 text-gray-500">
-                    {item.type === 'SERVICIO' ? 'Servicio' : 'Repuesto'}
+                    {t(`itemType.${item.type}`)}
                   </td>
                   <td className="px-4 py-2 text-right text-gray-600">
                     {item.quantity}
@@ -200,7 +210,7 @@ export default async function OrdenDetallePage({
       {/* Cambiar estado */}
       <section className="mb-6 rounded-xl border border-gray-200 bg-white p-5">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-600">
-          Estado
+          {t('detail.statusTitle')}
         </h2>
         <StatusActions orderId={order.id} status={order.status} />
       </section>
@@ -208,7 +218,7 @@ export default async function OrdenDetallePage({
       {/* Media */}
       <section className="rounded-xl border border-gray-200 bg-white p-5">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-600">
-          Fotos y videos
+          {t('detail.mediaTitle')}
         </h2>
         <MediaSection orderId={order.id} />
       </section>

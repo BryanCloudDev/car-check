@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import { ApiError, apiFetch } from '@/lib/api';
 import type { OrderItem, WorkOrder } from '@car-check/shared';
 import { OrderForm } from '../../OrderForm';
@@ -13,6 +14,7 @@ export default async function EditarOrdenPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const t = await getTranslations('ordenes');
 
   let order: OrderWithItems;
   try {
@@ -32,10 +34,10 @@ export default async function EditarOrdenPage({
         href={`/ordenes/${id}`}
         className="text-sm text-gray-500 transition-colors hover:text-gray-900"
       >
-        ← Volver a la orden
+        {t('edit.back')}
       </Link>
       <h1 className="mb-6 mt-2 text-2xl font-bold text-gray-900">
-        Editar orden{' '}
+        {t('edit.title')}{' '}
         <span className="font-mono text-gray-500">
           {id.slice(0, 8).toUpperCase()}
         </span>
@@ -44,7 +46,7 @@ export default async function EditarOrdenPage({
       <OrderForm
         action={action}
         order={order}
-        submitLabel="Guardar cambios"
+        submitLabel={t('edit.submit')}
         cancelHref={`/ordenes/${id}`}
       />
     </div>
