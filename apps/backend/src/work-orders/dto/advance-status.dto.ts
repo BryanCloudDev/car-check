@@ -1,4 +1,5 @@
 import { IsEnum } from 'class-validator';
+import { i18nValidationMessage } from 'nestjs-i18n';
 import { ApiProperty } from '@nestjs/swagger';
 import { OrderStatus } from '../../../generated/prisma/client';
 
@@ -8,6 +9,8 @@ export class AdvanceStatusDto {
     enum: OrderStatus,
     example: OrderStatus.EN_PROCESO,
   })
-  @IsEnum(OrderStatus, { message: 'El estado de la orden no es válido' })
+  @IsEnum(OrderStatus, {
+    message: i18nValidationMessage('validation.workOrder.statusInvalid'),
+  })
   status: OrderStatus;
 }

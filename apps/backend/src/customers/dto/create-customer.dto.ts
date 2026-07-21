@@ -1,4 +1,5 @@
 import { IsEmail, IsOptional, IsString, MinLength } from 'class-validator';
+import { i18nValidationMessage } from 'nestjs-i18n';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateCustomerDto {
@@ -6,23 +7,30 @@ export class CreateCustomerDto {
     description: 'Nombre completo del cliente',
     example: 'Juan Pérez',
   })
-  @IsString({ message: 'El nombre debe ser texto' })
-  @MinLength(2, { message: 'El nombre debe tener al menos 2 caracteres' })
+  @IsString({ message: i18nValidationMessage('validation.customer.nameText') })
+  @MinLength(2, {
+    message: i18nValidationMessage('validation.customer.nameMinLength'),
+  })
   name: string;
 
   @ApiProperty({
     description: 'Teléfono de contacto',
     example: '+52 55 9876 5432',
   })
-  @IsString({ message: 'El teléfono debe ser texto' })
-  @MinLength(7, { message: 'El teléfono debe tener al menos 7 caracteres' })
+  @IsString({ message: i18nValidationMessage('validation.customer.phoneText') })
+  @MinLength(7, {
+    message: i18nValidationMessage('validation.customer.phoneMinLength'),
+  })
   phone: string;
 
   @ApiPropertyOptional({
     description: 'Correo electrónico',
     example: 'juan@example.com',
   })
-  @IsEmail({}, { message: 'Ingresá un correo electrónico válido' })
+  @IsEmail(
+    {},
+    { message: i18nValidationMessage('validation.customer.emailInvalid') },
+  )
   @IsOptional()
   email?: string;
 }

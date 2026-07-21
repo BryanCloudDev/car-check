@@ -1,0 +1,58 @@
+{
+  "auth": {
+    "emailInvalid": "Email must be a valid email address",
+    "passwordText": "Password must be text",
+    "passwordRequired": "Password is required",
+    "workshopNameText": "Workshop name must be text",
+    "workshopNameRequired": "Workshop name is required",
+    "workshopEmailInvalid": "Workshop email must be a valid email address",
+    "phoneText": "Phone must be text",
+    "adminNameText": "Administrator name must be text",
+    "adminNameRequired": "Administrator name is required",
+    "adminEmailInvalid": "Administrator email must be a valid email address",
+    "adminPasswordText": "Password must be text",
+    "adminPasswordMinLength": "Password must be at least {constraints.0} characters long"
+  },
+  "customer": {
+    "nameText": "Name must be text",
+    "nameMinLength": "Name must be at least {constraints.0} characters long",
+    "phoneText": "Phone must be text",
+    "phoneMinLength": "Phone must be at least {constraints.0} characters long",
+    "emailInvalid": "Enter a valid email address"
+  },
+  "media": {
+    "keyText": "File key must be text",
+    "keyRequired": "File key is required",
+    "contentTypeNotAllowed": "File type is not allowed",
+    "sizeInt": "File size must be an integer",
+    "sizeMin": "File size must be greater than 0",
+    "sizeMax": "File exceeds the maximum allowed size"
+  },
+  "vehicle": {
+    "vin": "VIN must be 17 alphanumeric characters (no I, O, Q)",
+    "plateText": "Plate must be text",
+    "makeText": "Make must be text",
+    "modelText": "Model must be text",
+    "yearInt": "Year must be an integer",
+    "yearMin": "Year must be {constraints.0} or later",
+    "yearMax": "Year cannot be greater than {constraints.0}",
+    "mileageInt": "Mileage must be an integer",
+    "mileageMin": "Mileage cannot be negative",
+    "searchText": "Search term must be text"
+  },
+  "workOrder": {
+    "statusInvalid": "The order status is not valid",
+    "itemTypeInvalid": "Item type must be SERVICIO or REPUESTO",
+    "itemDescriptionText": "Description must be text",
+    "itemDescriptionRequired": "Each item needs a description",
+    "quantityInt": "Quantity must be an integer",
+    "quantityMin": "Quantity must be {constraints.0} or more",
+    "unitPriceNumber": "Unit price must be a number",
+    "unitPriceMin": "Unit price cannot be negative",
+    "customerRequired": "Select a customer",
+    "notesText": "Notes must be text",
+    "serviceDateInvalid": "Service date must have a valid format",
+    "itemsArray": "Items must be a list",
+    "itemsMinSize": "Add at least one item to the order"
+  }
+}

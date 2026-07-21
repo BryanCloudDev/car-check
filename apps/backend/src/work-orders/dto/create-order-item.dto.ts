@@ -8,6 +8,7 @@ import {
   Min,
   MinLength,
 } from 'class-validator';
+import { i18nValidationMessage } from 'nestjs-i18n';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { OrderItemType } from '../../../generated/prisma/client';
 
@@ -18,7 +19,7 @@ export class CreateOrderItemDto {
     example: OrderItemType.SERVICIO,
   })
   @IsEnum(OrderItemType, {
-    message: 'El tipo de ítem debe ser SERVICIO o REPUESTO',
+    message: i18nValidationMessage('validation.workOrder.itemTypeInvalid'),
   })
   type: OrderItemType;
 
@@ -26,8 +27,14 @@ export class CreateOrderItemDto {
     description: 'Descripción del servicio o repuesto',
     example: 'Cambio de aceite 5W-30',
   })
-  @IsString({ message: 'La descripción debe ser texto' })
-  @MinLength(1, { message: 'Cada ítem necesita una descripción' })
+  @IsString({
+    message: i18nValidationMessage('validation.workOrder.itemDescriptionText'),
+  })
+  @MinLength(1, {
+    message: i18nValidationMessage(
+      'validation.workOrder.itemDescriptionRequired',
+    ),
+  })
   description: string;
 
   @ApiPropertyOptional({
@@ -36,8 +43,10 @@ export class CreateOrderItemDto {
     minimum: 1,
   })
   @Type(() => Number)
-  @IsInt({ message: 'La cantidad debe ser un número entero' })
-  @Min(1, { message: 'La cantidad debe ser 1 o más' })
+  @IsInt({ message: i18nValidationMessage('validation.workOrder.quantityInt') })
+  @Min(1, {
+    message: i18nValidationMessage('validation.workOrder.quantityMin'),
+  })
   @IsOptional()
   quantity?: number;
 
@@ -47,8 +56,13 @@ export class CreateOrderItemDto {
     minimum: 0,
   })
   @Type(() => Number)
-  @IsNumber({}, { message: 'El precio unitario debe ser un número' })
-  @Min(0, { message: 'El precio unitario no puede ser negativo' })
+  @IsNumber(
+    {},
+    { message: i18nValidationMessage('validation.workOrder.unitPriceNumber') },
+  )
+  @Min(0, {
+    message: i18nValidationMessage('validation.workOrder.unitPriceMin'),
+  })
   @IsOptional()
   unitPrice?: number;
 }

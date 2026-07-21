@@ -1,4 +1,5 @@
 import { IsEmail, IsString, MinLength } from 'class-validator';
+import { i18nValidationMessage } from 'nestjs-i18n';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class LoginDto {
@@ -6,11 +7,16 @@ export class LoginDto {
     description: 'Email del usuario',
     example: 'admin@taller.com',
   })
-  @IsEmail({}, { message: 'El email debe ser un email válido' })
+  @IsEmail(
+    {},
+    { message: i18nValidationMessage('validation.auth.emailInvalid') },
+  )
   email: string;
 
   @ApiProperty({ description: 'Contraseña del usuario', example: 'secret123' })
-  @IsString({ message: 'La contraseña debe ser texto' })
-  @MinLength(1, { message: 'La contraseña es obligatoria' })
+  @IsString({ message: i18nValidationMessage('validation.auth.passwordText') })
+  @MinLength(1, {
+    message: i18nValidationMessage('validation.auth.passwordRequired'),
+  })
   password: string;
 }

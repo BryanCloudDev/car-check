@@ -1,5 +1,6 @@
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import { I18nValidationExceptionFilter, I18nValidationPipe } from 'nestjs-i18n';
 import request from 'supertest';
 import { AppModule } from '../../src/app.module';
 import { HttpExceptionFilter } from '../../src/common/filters/http-exception.filter';
@@ -11,8 +12,20 @@ export async function createTestApp(): Promise<INestApplication> {
   }).compile();
 
   const app = moduleFixture.createNestApplication();
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
-  app.useGlobalFilters(new HttpExceptionFilter());
+  app.useGlobalPipes(
+    new I18nValidationPipe({ whitelist: true, transform: true }),
+  );
+  app.useGlobalFilters(
+    new HttpExceptionFilter(),
+    new I18nValidationExceptionFilter({
+      detailedErrors: false,
+      responseBodyFormatter: (_host, exc, formattedErrors) => ({
+        statusCode: exc.getStatus(),
+        error: 'Solicitud inválida',
+        message: formattedErrors,
+      }),
+    }),
+  );
   await app.init();
   return app;
 }
@@ -36,7 +49,7 @@ export async function registerWorkshop(
     })
     .expect(201);
 
-  const token: string = res.body.accessToken as string;
+  const token = (res.body as { accessToken: string }).accessToken;
   const payload = JSON.parse(
     Buffer.from(token.split('.')[1], 'base64url').toString(),
   ) as { workshopId: string };

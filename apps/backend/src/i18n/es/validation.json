@@ -1,0 +1,58 @@
+{
+  "auth": {
+    "emailInvalid": "El email debe ser un email válido",
+    "passwordText": "La contraseña debe ser texto",
+    "passwordRequired": "La contraseña es obligatoria",
+    "workshopNameText": "El nombre del taller debe ser texto",
+    "workshopNameRequired": "El nombre del taller es obligatorio",
+    "workshopEmailInvalid": "El email del taller debe ser un email válido",
+    "phoneText": "El teléfono debe ser texto",
+    "adminNameText": "El nombre del administrador debe ser texto",
+    "adminNameRequired": "El nombre del administrador es obligatorio",
+    "adminEmailInvalid": "El email del administrador debe ser un email válido",
+    "adminPasswordText": "La contraseña debe ser texto",
+    "adminPasswordMinLength": "La contraseña debe tener al menos {constraints.0} caracteres"
+  },
+  "customer": {
+    "nameText": "El nombre debe ser texto",
+    "nameMinLength": "El nombre debe tener al menos {constraints.0} caracteres",
+    "phoneText": "El teléfono debe ser texto",
+    "phoneMinLength": "El teléfono debe tener al menos {constraints.0} caracteres",
+    "emailInvalid": "Ingresá un correo electrónico válido"
+  },
+  "media": {
+    "keyText": "La clave del archivo debe ser texto",
+    "keyRequired": "La clave del archivo es obligatoria",
+    "contentTypeNotAllowed": "El tipo de archivo no está permitido",
+    "sizeInt": "El tamaño del archivo debe ser un número entero",
+    "sizeMin": "El tamaño del archivo debe ser mayor a 0",
+    "sizeMax": "El archivo supera el tamaño máximo permitido"
+  },
+  "vehicle": {
+    "vin": "El VIN debe tener 17 caracteres alfanuméricos (sin I, O, Q)",
+    "plateText": "La placa debe ser texto",
+    "makeText": "La marca debe ser texto",
+    "modelText": "El modelo debe ser texto",
+    "yearInt": "El año debe ser un número entero",
+    "yearMin": "El año debe ser {constraints.0} o posterior",
+    "yearMax": "El año no puede ser mayor a {constraints.0}",
+    "mileageInt": "El kilometraje debe ser un número entero",
+    "mileageMin": "El kilometraje no puede ser negativo",
+    "searchText": "El término de búsqueda debe ser texto"
+  },
+  "workOrder": {
+    "statusInvalid": "El estado de la orden no es válido",
+    "itemTypeInvalid": "El tipo de ítem debe ser SERVICIO o REPUESTO",
+    "itemDescriptionText": "La descripción debe ser texto",
+    "itemDescriptionRequired": "Cada ítem necesita una descripción",
+    "quantityInt": "La cantidad debe ser un número entero",
+    "quantityMin": "La cantidad debe ser {constraints.0} o más",
+    "unitPriceNumber": "El precio unitario debe ser un número",
+    "unitPriceMin": "El precio unitario no puede ser negativo",
+    "customerRequired": "Seleccioná un cliente",
+    "notesText": "Las notas deben ser texto",
+    "serviceDateInvalid": "La fecha de servicio debe tener un formato válido",
+    "itemsArray": "Los ítems deben ser una lista",
+    "itemsMinSize": "Agregá al menos un ítem a la orden"
+  }
+}

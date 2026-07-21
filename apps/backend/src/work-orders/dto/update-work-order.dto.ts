@@ -9,6 +9,7 @@ import {
   Min,
   ValidateNested,
 } from 'class-validator';
+import { i18nValidationMessage } from 'nestjs-i18n';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { CreateOrderItemDto } from './create-order-item.dto';
 
@@ -18,8 +19,8 @@ export class UpdateWorkOrderDto {
     example: 63000,
   })
   @Type(() => Number)
-  @IsInt({ message: 'El kilometraje debe ser un número entero' })
-  @Min(0, { message: 'El kilometraje no puede ser negativo' })
+  @IsInt({ message: i18nValidationMessage('validation.vehicle.mileageInt') })
+  @Min(0, { message: i18nValidationMessage('validation.vehicle.mileageMin') })
   @IsOptional()
   mileage?: number;
 
@@ -27,7 +28,9 @@ export class UpdateWorkOrderDto {
     description: 'Notas u observaciones',
     example: 'Se detectó fuga de aceite adicional.',
   })
-  @IsString({ message: 'Las notas deben ser texto' })
+  @IsString({
+    message: i18nValidationMessage('validation.workOrder.notesText'),
+  })
   @IsOptional()
   notes?: string;
 
@@ -37,7 +40,9 @@ export class UpdateWorkOrderDto {
   })
   @IsDateString(
     {},
-    { message: 'La fecha de servicio debe tener un formato válido' },
+    {
+      message: i18nValidationMessage('validation.workOrder.serviceDateInvalid'),
+    },
   )
   @IsOptional()
   serviceDate?: string;
@@ -46,8 +51,12 @@ export class UpdateWorkOrderDto {
     description: 'Reemplazo completo de los ítems de la orden.',
     type: [CreateOrderItemDto],
   })
-  @IsArray({ message: 'Los ítems deben ser una lista' })
-  @ArrayMinSize(1, { message: 'Agregá al menos un ítem a la orden' })
+  @IsArray({
+    message: i18nValidationMessage('validation.workOrder.itemsArray'),
+  })
+  @ArrayMinSize(1, {
+    message: i18nValidationMessage('validation.workOrder.itemsMinSize'),
+  })
   @ValidateNested({ each: true })
   @Type(() => CreateOrderItemDto)
   @IsOptional()

@@ -1,4 +1,5 @@
 import { IsOptional, IsString } from 'class-validator';
+import { i18nValidationMessage } from 'nestjs-i18n';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class SearchVehiclesDto {
@@ -8,7 +9,7 @@ export class SearchVehiclesDto {
       'Si se omite, devuelve todos los vehículos.',
     example: '1HGCM82633A004352',
   })
-  @IsString({ message: 'El término de búsqueda debe ser texto' })
+  @IsString({ message: i18nValidationMessage('validation.vehicle.searchText') })
   @IsOptional()
   q?: string;
 }

@@ -5,6 +5,7 @@ import {
   IsString,
   MinLength,
 } from 'class-validator';
+import { i18nValidationMessage } from 'nestjs-i18n';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class RegisterDto {
@@ -12,22 +13,29 @@ export class RegisterDto {
     description: 'Nombre del taller',
     example: 'Taller Mecánico García',
   })
-  @IsString({ message: 'El nombre del taller debe ser texto' })
-  @IsNotEmpty({ message: 'El nombre del taller es obligatorio' })
+  @IsString({
+    message: i18nValidationMessage('validation.auth.workshopNameText'),
+  })
+  @IsNotEmpty({
+    message: i18nValidationMessage('validation.auth.workshopNameRequired'),
+  })
   workshopName: string;
 
   @ApiProperty({
     description: 'Email de contacto del taller',
     example: 'contacto@taller.com',
   })
-  @IsEmail({}, { message: 'El email del taller debe ser un email válido' })
+  @IsEmail(
+    {},
+    { message: i18nValidationMessage('validation.auth.workshopEmailInvalid') },
+  )
   workshopEmail: string;
 
   @ApiPropertyOptional({
     description: 'Teléfono del taller',
     example: '+52 55 1234 5678',
   })
-  @IsString({ message: 'El teléfono debe ser texto' })
+  @IsString({ message: i18nValidationMessage('validation.auth.phoneText') })
   @IsOptional()
   workshopPhone?: string;
 
@@ -35,8 +43,10 @@ export class RegisterDto {
     description: 'Nombre del administrador',
     example: 'Carlos García',
   })
-  @IsString({ message: 'El nombre del administrador debe ser texto' })
-  @IsNotEmpty({ message: 'El nombre del administrador es obligatorio' })
+  @IsString({ message: i18nValidationMessage('validation.auth.adminNameText') })
+  @IsNotEmpty({
+    message: i18nValidationMessage('validation.auth.adminNameRequired'),
+  })
   adminName: string;
 
   @ApiProperty({
@@ -45,7 +55,7 @@ export class RegisterDto {
   })
   @IsEmail(
     {},
-    { message: 'El email del administrador debe ser un email válido' },
+    { message: i18nValidationMessage('validation.auth.adminEmailInvalid') },
   )
   adminEmail: string;
 
@@ -53,7 +63,11 @@ export class RegisterDto {
     description: 'Contraseña del administrador (mínimo 8 caracteres)',
     example: 'Segura123!',
   })
-  @IsString({ message: 'La contraseña debe ser texto' })
-  @MinLength(8, { message: 'La contraseña debe tener al menos 8 caracteres' })
+  @IsString({
+    message: i18nValidationMessage('validation.auth.adminPasswordText'),
+  })
+  @MinLength(8, {
+    message: i18nValidationMessage('validation.auth.adminPasswordMinLength'),
+  })
   adminPassword: string;
 }

@@ -1,4 +1,5 @@
 import { IsIn, IsInt, IsOptional, Max, Min } from 'class-validator';
+import { i18nValidationMessage } from 'nestjs-i18n';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ALLOWED_CONTENT_TYPES, MAX_BYTES } from '../media.constants';
 
@@ -9,7 +10,7 @@ export class CreateUploadUrlDto {
     example: 'image/jpeg',
   })
   @IsIn(ALLOWED_CONTENT_TYPES, {
-    message: 'El tipo de archivo no está permitido',
+    message: i18nValidationMessage('validation.media.contentTypeNotAllowed'),
   })
   contentType: string;
 
@@ -19,10 +20,10 @@ export class CreateUploadUrlDto {
     example: 204800,
   })
   @IsOptional()
-  @IsInt({ message: 'El tamaño del archivo debe ser un número entero' })
-  @Min(1, { message: 'El tamaño del archivo debe ser mayor a 0' })
+  @IsInt({ message: i18nValidationMessage('validation.media.sizeInt') })
+  @Min(1, { message: i18nValidationMessage('validation.media.sizeMin') })
   @Max(MAX_BYTES.VIDEO, {
-    message: 'El archivo supera el tamaño máximo permitido',
+    message: i18nValidationMessage('validation.media.sizeMax'),
   })
   sizeBytes?: number;
 }

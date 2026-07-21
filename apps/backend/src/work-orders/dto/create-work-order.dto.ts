@@ -11,6 +11,7 @@ import {
   Min,
   ValidateNested,
 } from 'class-validator';
+import { i18nValidationMessage } from 'nestjs-i18n';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { VIN_REGEX } from '../../common/constants';
 import { CreateOrderItemDto } from './create-order-item.dto';
@@ -24,7 +25,7 @@ export class CreateWorkOrderDto {
     typeof value === 'string' ? value.trim().toUpperCase() : value,
   )
   @Matches(VIN_REGEX, {
-    message: 'El VIN debe tener 17 caracteres alfanuméricos (sin I, O, Q)',
+    message: i18nValidationMessage('validation.vehicle.vin'),
   })
   vin: string;
 
@@ -32,12 +33,12 @@ export class CreateWorkOrderDto {
     description: 'Placa del vehículo',
     example: 'ABC-123',
   })
-  @IsString({ message: 'La placa debe ser texto' })
+  @IsString({ message: i18nValidationMessage('validation.vehicle.plateText') })
   @IsOptional()
   plate?: string;
 
   @ApiPropertyOptional({ description: 'Marca del vehículo', example: 'Toyota' })
-  @IsString({ message: 'La marca debe ser texto' })
+  @IsString({ message: i18nValidationMessage('validation.vehicle.makeText') })
   @IsOptional()
   make?: string;
 
@@ -45,16 +46,16 @@ export class CreateWorkOrderDto {
     description: 'Modelo del vehículo',
     example: 'Corolla',
   })
-  @IsString({ message: 'El modelo debe ser texto' })
+  @IsString({ message: i18nValidationMessage('validation.vehicle.modelText') })
   @IsOptional()
   model?: string;
 
   @ApiPropertyOptional({ description: 'Año del vehículo', example: 2019 })
   @Type(() => Number)
-  @IsInt({ message: 'El año debe ser un número entero' })
-  @Min(1885, { message: 'El año debe ser 1885 o posterior' })
+  @IsInt({ message: i18nValidationMessage('validation.vehicle.yearInt') })
+  @Min(1885, { message: i18nValidationMessage('validation.vehicle.yearMin') })
   @Max(new Date().getFullYear() + 1, {
-    message: 'El año no puede ser mayor a $constraint1',
+    message: i18nValidationMessage('validation.vehicle.yearMax'),
   })
   @IsOptional()
   year?: number;
@@ -63,7 +64,9 @@ export class CreateWorkOrderDto {
     description: 'ID del cliente (UUID)',
     example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
   })
-  @IsString({ message: 'Seleccioná un cliente' })
+  @IsString({
+    message: i18nValidationMessage('validation.workOrder.customerRequired'),
+  })
   customerId: string;
 
   @ApiPropertyOptional({
@@ -71,8 +74,8 @@ export class CreateWorkOrderDto {
     example: 62000,
   })
   @Type(() => Number)
-  @IsInt({ message: 'El kilometraje debe ser un número entero' })
-  @Min(0, { message: 'El kilometraje no puede ser negativo' })
+  @IsInt({ message: i18nValidationMessage('validation.vehicle.mileageInt') })
+  @Min(0, { message: i18nValidationMessage('validation.vehicle.mileageMin') })
   @IsOptional()
   mileage?: number;
 
@@ -80,7 +83,9 @@ export class CreateWorkOrderDto {
     description: 'Notas u observaciones de la orden',
     example: 'Cliente menciona ruido al frenar.',
   })
-  @IsString({ message: 'Las notas deben ser texto' })
+  @IsString({
+    message: i18nValidationMessage('validation.workOrder.notesText'),
+  })
   @IsOptional()
   notes?: string;
 
@@ -90,7 +95,9 @@ export class CreateWorkOrderDto {
   })
   @IsDateString(
     {},
-    { message: 'La fecha de servicio debe tener un formato válido' },
+    {
+      message: i18nValidationMessage('validation.workOrder.serviceDateInvalid'),
+    },
   )
   @IsOptional()
   serviceDate?: string;
@@ -99,8 +106,12 @@ export class CreateWorkOrderDto {
     description: 'Ítems de la orden (servicios y/o repuestos). Mínimo 1.',
     type: [CreateOrderItemDto],
   })
-  @IsArray({ message: 'Los ítems deben ser una lista' })
-  @ArrayMinSize(1, { message: 'Agregá al menos un ítem a la orden' })
+  @IsArray({
+    message: i18nValidationMessage('validation.workOrder.itemsArray'),
+  })
+  @ArrayMinSize(1, {
+    message: i18nValidationMessage('validation.workOrder.itemsMinSize'),
+  })
   @ValidateNested({ each: true })
   @Type(() => CreateOrderItemDto)
   items: CreateOrderItemDto[];
