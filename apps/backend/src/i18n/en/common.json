@@ -1,4 +1,15 @@
 {
   "greeting": "Hello",
-  "welcome": "Welcome to Car Check"
+  "welcome": "Welcome to Car Check",
+  "errors": {
+    "badRequest": "Bad request",
+    "unauthorized": "Unauthorized",
+    "forbidden": "Forbidden",
+    "notFound": "Not found",
+    "conflict": "Conflict",
+    "unprocessableEntity": "Unprocessable entity",
+    "tooManyRequests": "Too many requests",
+    "internalServerError": "Internal server error",
+    "default": "Error"
+  }
 }

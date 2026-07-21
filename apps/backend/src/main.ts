@@ -1,6 +1,11 @@
 import { NestFactory } from '@nestjs/core';
 import { SwaggerModule } from '@nestjs/swagger';
-import { I18nValidationExceptionFilter, I18nValidationPipe } from 'nestjs-i18n';
+import {
+  I18nContext,
+  I18nService,
+  I18nValidationExceptionFilter,
+  I18nValidationPipe,
+} from 'nestjs-i18n';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { swaggerConfig, swaggerUiOptions } from './common/swagger/config';
@@ -22,13 +27,16 @@ async function bootstrap() {
       transform: true,
     }),
   );
+  const i18n: I18nService = app.get(I18nService);
   app.useGlobalFilters(
-    new HttpExceptionFilter(),
+    new HttpExceptionFilter(i18n),
     new I18nValidationExceptionFilter({
       detailedErrors: false,
-      responseBodyFormatter: (_host, exc, formattedErrors) => ({
+      responseBodyFormatter: (host, exc, formattedErrors) => ({
         statusCode: exc.getStatus(),
-        error: 'Solicitud inválida',
+        error: i18n.translate('common.errors.badRequest', {
+          lang: I18nContext.current(host)?.lang,
+        }),
         message: formattedErrors,
       }),
     }),

@@ -1,4 +1,15 @@
 {
   "greeting": "Hola",
-  "welcome": "Bienvenido a Car Check"
+  "welcome": "Bienvenido a Car Check",
+  "errors": {
+    "badRequest": "Solicitud inválida",
+    "unauthorized": "No autorizado",
+    "forbidden": "Acceso denegado",
+    "notFound": "No encontrado",
+    "conflict": "Conflicto",
+    "unprocessableEntity": "Datos no procesables",
+    "tooManyRequests": "Demasiadas solicitudes",
+    "internalServerError": "Error interno del servidor",
+    "default": "Error"
+  }
 }
