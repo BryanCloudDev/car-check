@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
+import { useTranslations } from 'next-intl';
 import type { Customer } from '@car-check/shared';
 import type { CustomerFormState } from './actions';
 
@@ -23,13 +24,14 @@ function FieldError({ message }: { message?: string }) {
 
 function SubmitButton({ label }: { label: string }) {
   const { pending } = useFormStatus();
+  const t = useTranslations('clientes.form');
   return (
     <button
       type="submit"
       disabled={pending}
       className="rounded-lg bg-gray-900 px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60"
     >
-      {pending ? 'Guardando…' : label}
+      {pending ? t('saving') : label}
     </button>
   );
 }
@@ -43,6 +45,7 @@ export function CustomerForm({
   customer?: Customer;
   submitLabel: string;
 }) {
+  const t = useTranslations('clientes.form');
   const [state, formAction] = useActionState<CustomerFormState, FormData>(
     action,
     {},
@@ -59,14 +62,14 @@ export function CustomerForm({
 
       <div>
         <label htmlFor="name" className={labelClass}>
-          Nombre
+          {t('name')}
         </label>
         <input
           id="name"
           name="name"
           type="text"
           autoComplete="off"
-          placeholder="Juan Pérez"
+          placeholder={t('namePlaceholder')}
           defaultValue={customer?.name ?? ''}
           className={inputClass}
           aria-invalid={Boolean(fieldErrors.name)}
@@ -77,14 +80,14 @@ export function CustomerForm({
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <div>
           <label htmlFor="phone" className={labelClass}>
-            Teléfono
+            {t('phone')}
           </label>
           <input
             id="phone"
             name="phone"
             type="tel"
             autoComplete="off"
-            placeholder="+52 55 9876 5432"
+            placeholder={t('phonePlaceholder')}
             defaultValue={customer?.phone ?? ''}
             className={inputClass}
             aria-invalid={Boolean(fieldErrors.phone)}
@@ -93,14 +96,14 @@ export function CustomerForm({
         </div>
         <div>
           <label htmlFor="email" className={labelClass}>
-            Correo electrónico
+            {t('email')}
           </label>
           <input
             id="email"
             name="email"
             type="email"
             autoComplete="off"
-            placeholder="juan@example.com"
+            placeholder={t('emailPlaceholder')}
             defaultValue={customer?.email ?? ''}
             className={inputClass}
             aria-invalid={Boolean(fieldErrors.email)}
@@ -115,7 +118,7 @@ export function CustomerForm({
           href="/clientes"
           className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900"
         >
-          Cancelar
+          {t('cancel')}
         </Link>
       </div>
     </form>

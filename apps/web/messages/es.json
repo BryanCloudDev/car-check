@@ -25,5 +25,46 @@
     "label": "Idioma",
     "es": "Español",
     "en": "Inglés"
+  },
+  "clientes": {
+    "title": "Clientes",
+    "register": "Registrar cliente",
+    "loadError": "Error al cargar clientes",
+    "empty": "No hay clientes registrados.",
+    "search": "Buscar",
+    "searchPlaceholder": "Nombre, teléfono o correo",
+    "clearSearch": "Limpiar búsqueda",
+    "noResults": "No se encontraron clientes para “{query}”.",
+    "columns": {
+      "name": "Nombre",
+      "phone": "Teléfono",
+      "email": "Correo",
+      "actions": "Acciones"
+    },
+    "edit": "Editar",
+    "back": "← Volver a clientes",
+    "newTitle": "Registrar cliente",
+    "editTitle": "Editar cliente",
+    "submitNew": "Registrar",
+    "submitEdit": "Guardar cambios",
+    "form": {
+      "name": "Nombre",
+      "namePlaceholder": "Juan Pérez",
+      "phone": "Teléfono",
+      "phonePlaceholder": "+52 55 9876 5432",
+      "email": "Correo electrónico",
+      "emailPlaceholder": "juan@example.com",
+      "cancel": "Cancelar",
+      "saving": "Guardando…"
+    },
+    "errors": {
+      "nameMin": "El nombre debe tener al menos 2 caracteres.",
+      "phoneMin": "El teléfono debe tener al menos 7 caracteres.",
+      "emailInvalid": "Ingresá un correo electrónico válido.",
+      "invalidData": "Datos inválidos. Revisá los campos e intentá de nuevo.",
+      "createFailed": "No se pudo registrar el cliente. Intentá de nuevo.",
+      "updateFailed": "No se pudo actualizar el cliente. Intentá de nuevo.",
+      "notFound": "El cliente ya no existe."
+    }
   }
 }

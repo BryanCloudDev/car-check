@@ -25,5 +25,46 @@
     "label": "Language",
     "es": "Spanish",
     "en": "English"
+  },
+  "clientes": {
+    "title": "Customers",
+    "register": "Add customer",
+    "loadError": "Failed to load customers",
+    "empty": "No customers registered.",
+    "search": "Search",
+    "searchPlaceholder": "Name, phone or email",
+    "clearSearch": "Clear search",
+    "noResults": "No customers found for “{query}”.",
+    "columns": {
+      "name": "Name",
+      "phone": "Phone",
+      "email": "Email",
+      "actions": "Actions"
+    },
+    "edit": "Edit",
+    "back": "← Back to customers",
+    "newTitle": "Add customer",
+    "editTitle": "Edit customer",
+    "submitNew": "Add",
+    "submitEdit": "Save changes",
+    "form": {
+      "name": "Name",
+      "namePlaceholder": "John Doe",
+      "phone": "Phone",
+      "phonePlaceholder": "+52 55 9876 5432",
+      "email": "Email",
+      "emailPlaceholder": "john@example.com",
+      "cancel": "Cancel",
+      "saving": "Saving…"
+    },
+    "errors": {
+      "nameMin": "Name must be at least 2 characters.",
+      "phoneMin": "Phone must be at least 7 characters.",
+      "emailInvalid": "Enter a valid email address.",
+      "invalidData": "Invalid data. Check the fields and try again.",
+      "createFailed": "Could not add the customer. Please try again.",
+      "updateFailed": "Could not update the customer. Please try again.",
+      "notFound": "The customer no longer exists."
+    }
   }
 }

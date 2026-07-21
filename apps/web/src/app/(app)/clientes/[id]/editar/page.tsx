@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import { ApiError, apiFetch } from '@/lib/api';
 import type { Customer } from '@car-check/shared';
 import { updateCustomerAction } from '../../actions';
@@ -10,6 +11,7 @@ export default async function EditarClientePage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const t = await getTranslations('clientes');
   const { id: rawId } = await params;
   const id = decodeURIComponent(rawId);
 
@@ -31,13 +33,15 @@ export default async function EditarClientePage({
         href="/clientes"
         className="mb-4 inline-block text-sm text-gray-500 transition-colors hover:text-gray-900"
       >
-        ← Volver a clientes
+        {t('back')}
       </Link>
-      <h1 className="mb-6 text-2xl font-bold text-gray-900">Editar cliente</h1>
+      <h1 className="mb-6 text-2xl font-bold text-gray-900">
+        {t('editTitle')}
+      </h1>
       <CustomerForm
         action={action}
         customer={customer}
-        submitLabel="Guardar cambios"
+        submitLabel={t('submitEdit')}
       />
     </div>
   );

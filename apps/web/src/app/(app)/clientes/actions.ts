@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import { ApiError, apiFetch } from '@/lib/api';
 import type { Customer } from '@car-check/shared';
 
@@ -17,22 +18,25 @@ type ParsedFields = {
   errors: Record<string, string>;
 };
 
-function parseFields(formData: FormData): ParsedFields {
+function parseFields(
+  formData: FormData,
+  t: (key: string) => string,
+): ParsedFields {
   const errors: Record<string, string> = {};
 
   const name = String(formData.get('name') ?? '').trim();
   if (name.length < 2) {
-    errors.name = 'El nombre debe tener al menos 2 caracteres.';
+    errors.name = t('nameMin');
   }
 
   const phone = String(formData.get('phone') ?? '').trim();
   if (phone.length < 7) {
-    errors.phone = 'El teléfono debe tener al menos 7 caracteres.';
+    errors.phone = t('phoneMin');
   }
 
   const email = String(formData.get('email') ?? '').trim();
   if (email && !EMAIL_REGEX.test(email)) {
-    errors.email = 'Ingresá un correo electrónico válido.';
+    errors.email = t('emailInvalid');
   }
 
   const values: ParsedFields['values'] = { name, phone };
@@ -45,7 +49,8 @@ export async function createCustomerAction(
   _prev: CustomerFormState,
   formData: FormData,
 ): Promise<CustomerFormState> {
-  const { values, errors } = parseFields(formData);
+  const t = await getTranslations('clientes.errors');
+  const { values, errors } = parseFields(formData, t);
   if (Object.keys(errors).length > 0) {
     return { fieldErrors: errors };
   }
@@ -58,12 +63,10 @@ export async function createCustomerAction(
   } catch (err) {
     if (err instanceof ApiError && err.status === 400) {
       return {
-        error:
-          err.firstMessage ??
-          'Datos inválidos. Revisá los campos e intentá de nuevo.',
+        error: err.firstMessage ?? t('invalidData'),
       };
     }
-    return { error: 'No se pudo registrar el cliente. Intentá de nuevo.' };
+    return { error: t('createFailed') };
   }
 
   revalidatePath('/clientes');
@@ -75,7 +78,8 @@ export async function updateCustomerAction(
   _prev: CustomerFormState,
   formData: FormData,
 ): Promise<CustomerFormState> {
-  const { values, errors } = parseFields(formData);
+  const t = await getTranslations('clientes.errors');
+  const { values, errors } = parseFields(formData, t);
   if (Object.keys(errors).length > 0) {
     return { fieldErrors: errors };
   }
@@ -89,16 +93,14 @@ export async function updateCustomerAction(
     });
   } catch (err) {
     if (err instanceof ApiError && err.status === 404) {
-      return { error: 'El cliente ya no existe.' };
+      return { error: t('notFound') };
     }
     if (err instanceof ApiError && err.status === 400) {
       return {
-        error:
-          err.firstMessage ??
-          'Datos inválidos. Revisá los campos e intentá de nuevo.',
+        error: err.firstMessage ?? t('invalidData'),
       };
     }
-    return { error: 'No se pudo actualizar el cliente. Intentá de nuevo.' };
+    return { error: t('updateFailed') };
   }
 
   revalidatePath('/clientes');

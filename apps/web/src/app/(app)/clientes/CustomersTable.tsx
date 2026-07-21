@@ -2,9 +2,11 @@
 
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import type { Customer } from '@car-check/shared';
 
 export function CustomersTable({ customers }: { customers: Customer[] }) {
+  const t = useTranslations('clientes');
   const [query, setQuery] = useState('');
 
   const filtered = useMemo(() => {
@@ -22,7 +24,7 @@ export function CustomersTable({ customers }: { customers: Customer[] }) {
           htmlFor="q"
           className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-600"
         >
-          Buscar
+          {t('search')}
         </label>
         <div className="relative">
           <input
@@ -30,7 +32,7 @@ export function CustomersTable({ customers }: { customers: Customer[] }) {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Nombre, teléfono o correo"
+            placeholder={t('searchPlaceholder')}
             autoComplete="off"
             className="w-full rounded-lg border border-gray-300 px-4 py-2 pr-9 text-sm text-gray-900 placeholder:text-gray-400 focus:border-gray-500 focus:outline-none"
           />
@@ -38,7 +40,7 @@ export function CustomersTable({ customers }: { customers: Customer[] }) {
             <button
               type="button"
               onClick={() => setQuery('')}
-              aria-label="Limpiar búsqueda"
+              aria-label={t('clearSearch')}
               className="absolute right-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-base leading-none text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
             >
               ×
@@ -49,17 +51,17 @@ export function CustomersTable({ customers }: { customers: Customer[] }) {
 
       {filtered.length === 0 ? (
         <p className="text-sm text-gray-500">
-          No se encontraron clientes para “{query.trim()}”.
+          {t('noResults', { query: query.trim() })}
         </p>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
           <table className="w-full min-w-[36rem] text-sm">
             <thead className="bg-gray-50 text-gray-600 uppercase text-xs tracking-wide">
               <tr>
-                <th className="px-4 py-3 text-left">Nombre</th>
-                <th className="px-4 py-3 text-left">Teléfono</th>
-                <th className="px-4 py-3 text-left">Correo</th>
-                <th className="px-4 py-3 text-right">Acciones</th>
+                <th className="px-4 py-3 text-left">{t('columns.name')}</th>
+                <th className="px-4 py-3 text-left">{t('columns.phone')}</th>
+                <th className="px-4 py-3 text-left">{t('columns.email')}</th>
+                <th className="px-4 py-3 text-right">{t('columns.actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -75,7 +77,7 @@ export function CustomersTable({ customers }: { customers: Customer[] }) {
                       href={`/clientes/${encodeURIComponent(c.id)}/editar`}
                       className="font-medium text-gray-700 transition-colors hover:text-gray-900"
                     >
-                      Editar
+                      {t('edit')}
                     </Link>
                   </td>
                 </tr>
