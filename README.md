@@ -175,6 +175,33 @@ Incluye todos los endpoints con esquemas de request/response, ejemplos de valore
 
 ---
 
+## Roles y permisos
+
+Cada usuario tiene un rol (`ADMIN` o `MECANICO`) que viaja dentro del JWT. La
+autorización se aplica en el **backend** (fuente de verdad) y se refleja en la
+**UI** ocultando o deshabilitando acciones.
+
+| Acción                                    | ADMIN | MECÁNICO |
+| ----------------------------------------- | :---: | :------: |
+| Ver dashboard / ingresos del taller       |  ✅   |    ❌    |
+| Ver órdenes y sus trabajos                |  ✅   |    ✅    |
+| Ver costos / precios / totales de órdenes |  ✅   |    ❌    |
+| Crear y editar órdenes + cambiar estado   |  ✅   |    ✅    |
+| Ver clientes                              |  ✅   |    ✅    |
+| Crear y editar clientes                   |  ✅   |    ✅    |
+| Borrar clientes                           |  ✅   |    ❌    |
+| Gestión de usuarios                       |  ✅   |    ❌    |
+
+**Backend** — se restringe con `RolesGuard` + `@Roles(...)` sobre los endpoints
+sensibles (un acceso no autorizado devuelve `403`). Ver detalle del patrón en
+`apps/backend/CLAUDE.md`.
+
+**Frontend** — el rol se obtiene desde `GET /api/auth/me` y condiciona la UI
+(ej: el dashboard es solo ADMIN, los costos se ocultan al MECÁNICO). Ocultar en
+la UI es solo UX: la seguridad real la garantiza el backend.
+
+---
+
 ## Base de datos (Prisma)
 
 Todos estos comandos se ejecutan con el prefijo `pnpm --filter backend` desde la raíz.

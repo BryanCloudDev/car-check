@@ -74,6 +74,36 @@ where: {
 - Workshop scope: todos los recursos son privados por taller — incluir siempre `workshopId` en queries
 - VIN: validar con `VIN_REGEX` de `common/constants.ts`
 
+## Autorización por rol (RBAC)
+
+Roles: `UserRole` = `ADMIN | MECANICO`. El rol viaja en el JWT (`payload.role`) y
+queda disponible en `request.user.role` tras `JwtAuthGuard`.
+
+Para restringir un endpoint a ciertos roles, combinar `RolesGuard` (a nivel de
+controller) con `@Roles(...)` (a nivel de handler):
+
+```ts
+import { UserRole } from '../../generated/prisma/client';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+
+@UseGuards(JwtAuthGuard, RolesGuard) // ← ambos, en este orden
+@Controller('customers')
+export class CustomersController {
+  @Delete(':id')
+  @Roles(UserRole.ADMIN) // sin @Roles → cualquier usuario autenticado
+  remove() { ... }
+}
+```
+
+- Un endpoint sin `@Roles` pasa el `RolesGuard` (solo exige JWT válido).
+- `RolesGuard` lanza `403 Forbidden` si el rol no coincide — documentarlo en Swagger.
+- Para inyectar el usuario autenticado completo: `@CurrentUser()` (además del
+  `@CurrentWorkshop()` existente).
+- `GET /api/auth/me` devuelve el usuario actual (con `role`, sin `passwordHash`);
+  es la fuente de verdad del rol para el frontend.
+
 ## Archivos por módulo
 
 Cada módulo tiene: `module.ts`, `controller.ts`, `service.ts`, `dto/`.
