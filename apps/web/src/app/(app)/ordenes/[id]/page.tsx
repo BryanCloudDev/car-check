@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { ApiError, apiFetch } from '@/lib/api';
+import { getCurrentUser } from '@/lib/auth';
 import { MediaSection } from '@/components/MediaSection';
 import type {
   Customer,
@@ -43,6 +44,7 @@ export default async function OrdenDetallePage({
 }) {
   const { id } = await params;
   const t = await getTranslations('ordenes');
+  const canSeeCost = (await getCurrentUser()).role === 'ADMIN';
 
   let order: OrderWithRelations;
   try {
@@ -84,12 +86,14 @@ export default async function OrdenDetallePage({
           >
             {t('detail.edit')}
           </Link>
-          <a
-            href={`/api/work-orders/${order.id}/receipt`}
-            className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100"
-          >
-            {t('detail.downloadPdf')}
-          </a>
+          {canSeeCost && (
+            <a
+              href={`/api/work-orders/${order.id}/receipt`}
+              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100"
+            >
+              {t('detail.downloadPdf')}
+            </a>
+          )}
         </div>
       </div>
 
@@ -139,12 +143,14 @@ export default async function OrdenDetallePage({
               : '—'}
           </dd>
         </div>
-        <div>
-          <dt className="text-gray-500">{t('detail.total')}</dt>
-          <dd className="font-semibold text-gray-900">
-            {formatMoney(order.cost)}
-          </dd>
-        </div>
+        {canSeeCost && (
+          <div>
+            <dt className="text-gray-500">{t('detail.total')}</dt>
+            <dd className="font-semibold text-gray-900">
+              {formatMoney(order.cost)}
+            </dd>
+          </div>
+        )}
       </dl>
 
       {order.notes && (
@@ -174,12 +180,16 @@ export default async function OrdenDetallePage({
                 <th className="px-4 py-2 text-right">
                   {t('itemColumns.quantity')}
                 </th>
-                <th className="px-4 py-2 text-right">
-                  {t('itemColumns.unitPrice')}
-                </th>
-                <th className="px-4 py-2 text-right">
-                  {t('itemColumns.subtotal')}
-                </th>
+                {canSeeCost && (
+                  <>
+                    <th className="px-4 py-2 text-right">
+                      {t('itemColumns.unitPrice')}
+                    </th>
+                    <th className="px-4 py-2 text-right">
+                      {t('itemColumns.subtotal')}
+                    </th>
+                  </>
+                )}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -194,12 +204,16 @@ export default async function OrdenDetallePage({
                   <td className="px-4 py-2 text-right text-gray-600">
                     {item.quantity}
                   </td>
-                  <td className="px-4 py-2 text-right text-gray-600">
-                    {formatMoney(item.unitPrice)}
-                  </td>
-                  <td className="px-4 py-2 text-right text-gray-800">
-                    {formatMoney(Number(item.unitPrice) * item.quantity)}
-                  </td>
+                  {canSeeCost && (
+                    <>
+                      <td className="px-4 py-2 text-right text-gray-600">
+                        {formatMoney(item.unitPrice)}
+                      </td>
+                      <td className="px-4 py-2 text-right text-gray-800">
+                        {formatMoney(Number(item.unitPrice) * item.quantity)}
+                      </td>
+                    </>
+                  )}
                 </tr>
               ))}
             </tbody>

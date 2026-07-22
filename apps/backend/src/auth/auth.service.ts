@@ -8,6 +8,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { UserRole } from '../../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { CurrentUserResponse } from './dto/current-user.response';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 
@@ -86,5 +87,24 @@ export class AuthService {
     });
 
     return { accessToken };
+  }
+
+  async me(userId: string): Promise<CurrentUserResponse> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        workshopId: true,
+      },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException();
+    }
+
+    return user;
   }
 }

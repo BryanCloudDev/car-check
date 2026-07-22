@@ -3,22 +3,31 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import type { UserRole } from '@car-check/shared';
 
 const navLinks = [
-  { href: '/', key: 'inicio' },
-  { href: '/vehiculos', key: 'vehiculos' },
-  { href: '/historial', key: 'historial' },
-  { href: '/clientes', key: 'clientes' },
-  { href: '/ordenes', key: 'ordenes' },
+  { href: '/', key: 'inicio', adminOnly: true },
+  { href: '/vehiculos', key: 'vehiculos', adminOnly: false },
+  { href: '/historial', key: 'historial', adminOnly: false },
+  { href: '/clientes', key: 'clientes', adminOnly: false },
+  { href: '/ordenes', key: 'ordenes', adminOnly: false },
 ] as const;
 
-export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
+export function SidebarNav({
+  role,
+  onNavigate,
+}: {
+  role: UserRole;
+  onNavigate?: () => void;
+}) {
   const pathname = usePathname();
   const t = useTranslations('nav');
+  const links =
+    role === 'ADMIN' ? navLinks : navLinks.filter((l) => !l.adminOnly);
 
   return (
     <nav className="flex-1 px-3 py-4 space-y-1">
-      {navLinks.map(({ href, key }) => {
+      {links.map(({ href, key }) => {
         const active = pathname === href || pathname.startsWith(`${href}/`);
         return (
           <Link

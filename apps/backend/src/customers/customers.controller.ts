@@ -17,8 +17,11 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { UserRole } from '../../generated/prisma/client';
 import { CurrentWorkshop } from '../auth/decorators/current-workshop.decorator';
+import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
 import { CustomersService } from './customers.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
@@ -29,7 +32,7 @@ import { UpdateCustomerDto } from './dto/update-customer.dto';
   status: 401,
   description: 'No autorizado. Token JWT inválido o ausente.',
 })
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('customers')
 export class CustomersController {
   constructor(private readonly customersService: CustomersService) {}
@@ -80,10 +83,18 @@ export class CustomersController {
   }
 
   @Delete(':id')
+  @Roles(UserRole.ADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Eliminar cliente' })
+  @ApiOperation({
+    summary: 'Eliminar cliente',
+    description: 'Solo disponible para usuarios con rol ADMIN.',
+  })
   @ApiParam({ name: 'id', description: 'ID del cliente (UUID)' })
   @ApiResponse({ status: 204, description: 'Cliente eliminado.' })
+  @ApiResponse({
+    status: 403,
+    description: 'Rol insuficiente (requiere ADMIN).',
+  })
   @ApiResponse({ status: 404, description: 'Cliente no encontrado.' })
   remove(@CurrentWorkshop() workshopId: string, @Param('id') id: string) {
     return this.customersService.remove(workshopId, id);

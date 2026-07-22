@@ -1,9 +1,26 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import { CurrentUser } from './decorators/current-user.decorator';
 import { AuthService } from './auth.service';
+import { JwtAuthGuard } from './jwt-auth.guard';
+import type { AuthenticatedUser } from './jwt.strategy';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { AuthTokenResponse } from './dto/auth-token.response';
+import { CurrentUserResponse } from './dto/current-user.response';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -42,5 +59,25 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Credenciales inválidas.' })
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
+  }
+
+  @Get('me')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
+  @ApiOperation({
+    summary: 'Usuario actual',
+    description: 'Devuelve los datos del usuario autenticado, incluido su rol.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Datos del usuario autenticado.',
+    type: CurrentUserResponse,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'No autorizado. Token JWT inválido o ausente.',
+  })
+  me(@CurrentUser() user: AuthenticatedUser) {
+    return this.authService.me(user.userId);
   }
 }

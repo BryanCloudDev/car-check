@@ -2,15 +2,18 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
+import type { UserRole } from '@car-check/shared';
 import { SidebarNav } from '@/components/SidebarNav';
 import { LanguageSelector } from '@/components/LanguageSelector';
 
 export function AppShell({
   children,
   logout,
+  role,
 }: {
   children: React.ReactNode;
   logout: () => Promise<void>;
+  role: UserRole;
 }) {
   const [open, setOpen] = useState(false);
   const t = useTranslations();
@@ -75,7 +78,7 @@ export function AppShell({
           </button>
         </div>
 
-        <SidebarNav onNavigate={() => setOpen(false)} />
+        <SidebarNav role={role} onNavigate={() => setOpen(false)} />
 
         <div className="space-y-2 border-t border-gray-700 px-3 py-4">
           <LanguageSelector />

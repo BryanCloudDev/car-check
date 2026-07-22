@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { apiFetch } from '@/lib/api';
+import { getCurrentUser } from '@/lib/auth';
 import type {
   Customer,
   OrderItem,
@@ -39,6 +40,7 @@ export default async function OrdenesPage({
   searchParams: Promise<{ status?: string }>;
 }) {
   const t = await getTranslations('ordenes');
+  const canSeeCost = (await getCurrentUser()).role === 'ADMIN';
   const { status: rawStatus } = await searchParams;
   const status = rawStatus && isOrderStatus(rawStatus) ? rawStatus : undefined;
 
@@ -114,7 +116,9 @@ export default async function OrdenesPage({
                 <th className="px-4 py-3 text-left">{t('columns.customer')}</th>
                 <th className="px-4 py-3 text-left">{t('columns.vehicle')}</th>
                 <th className="px-4 py-3 text-left">{t('columns.date')}</th>
-                <th className="px-4 py-3 text-right">{t('columns.total')}</th>
+                {canSeeCost && (
+                  <th className="px-4 py-3 text-right">{t('columns.total')}</th>
+                )}
                 <th className="px-4 py-3 text-right">{t('columns.actions')}</th>
               </tr>
             </thead>
@@ -147,9 +151,11 @@ export default async function OrdenesPage({
                   <td className="px-4 py-3 text-gray-600">
                     {formatDate(order.serviceDate)}
                   </td>
-                  <td className="px-4 py-3 text-right font-medium text-gray-900">
-                    {currency.format(Number(order.cost))}
-                  </td>
+                  {canSeeCost && (
+                    <td className="px-4 py-3 text-right font-medium text-gray-900">
+                      {currency.format(Number(order.cost))}
+                    </td>
+                  )}
                   <td className="px-4 py-3 text-right whitespace-nowrap">
                     <Link
                       href={`/ordenes/${order.id}`}

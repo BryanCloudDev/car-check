@@ -1,6 +1,8 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { apiFetch } from '@/lib/api';
+import { getCurrentUser } from '@/lib/auth';
 import type { OrderStatus } from '@car-check/shared';
 import { STATUS_STYLES } from './ordenes/constants';
 
@@ -40,6 +42,9 @@ function formatDate(value: string): string {
 }
 
 export default async function DashboardPage() {
+  const { role } = await getCurrentUser();
+  if (role !== 'ADMIN') redirect('/ordenes');
+
   const t = await getTranslations('dashboard');
   const tOrdenes = await getTranslations('ordenes');
 

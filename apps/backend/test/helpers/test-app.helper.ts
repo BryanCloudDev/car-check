@@ -5,7 +5,9 @@ import {
   I18nValidationExceptionFilter,
   I18nValidationPipe,
 } from 'nestjs-i18n';
+import * as bcrypt from 'bcrypt';
 import request from 'supertest';
+import { UserRole } from '../../generated/prisma/client';
 import { AppModule } from '../../src/app.module';
 import { HttpExceptionFilter } from '../../src/common/filters/http-exception.filter';
 import { PrismaService } from '../../src/prisma/prisma.service';
@@ -60,6 +62,33 @@ export async function registerWorkshop(
   ) as { workshopId: string };
 
   return { token, workshopId: payload.workshopId };
+}
+
+export async function createMechanic(
+  app: INestApplication,
+  workshopId: string,
+  suffix: string,
+): Promise<{ token: string }> {
+  const prisma = app.get(PrismaService);
+  const email = `mecanico.${suffix}@test.invalid`;
+  const password = 'password123';
+
+  await prisma.user.create({
+    data: {
+      name: `Mecánico ${suffix}`,
+      email,
+      passwordHash: await bcrypt.hash(password, 10),
+      role: UserRole.MECANICO,
+      workshopId,
+    },
+  });
+
+  const res = await request(app.getHttpServer())
+    .post('/auth/login')
+    .send({ email, password })
+    .expect(200);
+
+  return { token: (res.body as { accessToken: string }).accessToken };
 }
 
 /**
