@@ -13,6 +13,7 @@
     "networkError": "Error de red. Intenta de nuevo."
   },
   "nav": {
+    "inicio": "Inicio",
     "vehiculos": "Vehículos",
     "historial": "Historial",
     "clientes": "Clientes",
@@ -25,6 +26,31 @@
     "label": "Idioma",
     "es": "Español",
     "en": "Inglés"
+  },
+  "dashboard": {
+    "title": "Inicio",
+    "loadError": "Error al cargar el panel",
+    "revenue": {
+      "day": "Ingresos de hoy",
+      "month": "Ingresos del mes"
+    },
+    "activeOrders": {
+      "title": "Órdenes activas",
+      "total": "{count} en total"
+    },
+    "readyForPickup": {
+      "title": "Listos para entregar",
+      "viewAll": "Ver todos",
+      "empty": "No hay autos listos para entregar.",
+      "view": "Ver",
+      "columns": {
+        "customer": "Cliente",
+        "vehicle": "Vehículo",
+        "date": "Fecha",
+        "total": "Total",
+        "actions": "Acciones"
+      }
+    }
   },
   "clientes": {
     "title": "Clientes",

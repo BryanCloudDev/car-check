@@ -13,6 +13,7 @@
     "networkError": "Network error. Please try again."
   },
   "nav": {
+    "inicio": "Home",
     "vehiculos": "Vehicles",
     "historial": "History",
     "clientes": "Customers",
@@ -25,6 +26,31 @@
     "label": "Language",
     "es": "Spanish",
     "en": "English"
+  },
+  "dashboard": {
+    "title": "Home",
+    "loadError": "Failed to load dashboard",
+    "revenue": {
+      "day": "Today's revenue",
+      "month": "This month's revenue"
+    },
+    "activeOrders": {
+      "title": "Active orders",
+      "total": "{count} total"
+    },
+    "readyForPickup": {
+      "title": "Ready for pickup",
+      "viewAll": "View all",
+      "empty": "No cars ready for pickup.",
+      "view": "View",
+      "columns": {
+        "customer": "Customer",
+        "vehicle": "Vehicle",
+        "date": "Date",
+        "total": "Total",
+        "actions": "Actions"
+      }
+    }
   },
   "clientes": {
     "title": "Customers",

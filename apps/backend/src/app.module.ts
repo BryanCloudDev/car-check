@@ -11,6 +11,7 @@ import { VehiclesModule } from './vehicles/vehicles.module';
 import { CustomersModule } from './customers/customers.module';
 import { WorkOrdersModule } from './work-orders/work-orders.module';
 import { MediaModule } from './media/media.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { MediaModule } from './media/media.module';
     CustomersModule,
     WorkOrdersModule,
     MediaModule,
+    DashboardModule,
   ],
   controllers: [],
   providers: [],

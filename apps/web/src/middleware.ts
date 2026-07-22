@@ -28,7 +28,7 @@ export function middleware(request: NextRequest) {
   if (session && pathname === '/login') {
     return withLocaleCookie(
       request,
-      NextResponse.redirect(new URL('/vehiculos', request.url)),
+      NextResponse.redirect(new URL('/', request.url)),
     );
   }
 

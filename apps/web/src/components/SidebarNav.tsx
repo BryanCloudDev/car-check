@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 
 const navLinks = [
+  { href: '/', key: 'inicio' },
   { href: '/vehiculos', key: 'vehiculos' },
   { href: '/historial', key: 'historial' },
   { href: '/clientes', key: 'clientes' },
