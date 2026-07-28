@@ -1,6 +1,18 @@
 [build]
 builder = "DOCKERFILE"
 dockerfilePath = "apps/backend/Dockerfile"
+# Sin esto Railway reconstruye el backend en cada push, aunque el commit solo
+# tocara apps/web. Patrones estilo gitignore, relativos a la raíz del repo.
+# El backend no importa nada de packages/*, así que no se listan; un cambio en
+# esos paquetes que sí afecte al build llegaría vía pnpm-lock.yaml.
+watchPatterns = [
+  "/apps/backend/**",
+  "/package.json",
+  "/pnpm-lock.yaml",
+  "/pnpm-workspace.yaml",
+  "/railway.toml",
+  "/.dockerignore",
+]
 
 [deploy]
 # Las migraciones van en preDeployCommand, no encadenadas al startCommand:
