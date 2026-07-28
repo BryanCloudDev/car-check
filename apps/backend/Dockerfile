@@ -39,4 +39,6 @@ COPY --from=builder  /app/apps/backend/prisma     ./prisma
 COPY --from=builder  /app/apps/backend/prisma.config.ts ./prisma.config.ts
 
 EXPOSE 3001
-CMD ["node", "dist/main"]
+# nest build emits dist/src/** (prisma.config.ts at the package root widens the
+# TS rootDir), which is also what nest-cli.json assumes for the i18n assets.
+CMD ["node", "dist/src/main"]
