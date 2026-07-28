@@ -36,7 +36,7 @@ jobs:
           fi
           echo "name=$ENV" >> $GITHUB_OUTPUT
           # Backend service ID (same service across environments)
-          echo "railway_service=3adc7681-508c-4c8a-be01-d793c05b4909" >> $GITHUB_OUTPUT
+          echo "railway_service=b7209994-39a9-4e22-ad91-cfa6fdb48a74" >> $GITHUB_OUTPUT
 
           if [ "$ENV" = "prod" ]; then
             echo "railway_env_id=f14b3d44-6455-4e7b-8948-72342ee28771" >> $GITHUB_OUTPUT
