@@ -13,6 +13,21 @@ infra/
   s3/        Terraform — bucket S3 + IAM para media uploads
 ```
 
+## Entornos desplegados
+
+| Entorno | Frontend (Vercel)                                                | Backend (Railway)                               |
+| ------- | ---------------------------------------------------------------- | ----------------------------------------------- |
+| prod    | https://car-check-web.vercel.app                                 | https://backend-production-66534.up.railway.app |
+| dev     | https://car-check-web-git-dev-bryanclouddevs-projects.vercel.app | https://backend-development-98e2.up.railway.app |
+
+`main` despliega a prod y `dev` a development, de forma automática en cada push.
+Cada push despliega **solo el servicio afectado**: el backend se filtra con
+`watchPatterns` en `railway.toml` y la web con `turbo-ignore` en
+`apps/web/vercel.json`.
+
+La API cuelga de `/api` y Swagger de `/docs`. El frontend de dev está detrás del
+deployment protection de Vercel, así que hay que estar logueado para abrirlo.
+
 ---
 
 ## Requisitos
