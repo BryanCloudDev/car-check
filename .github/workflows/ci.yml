@@ -107,6 +107,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # turbo-ignore compara contra HEAD^1; con el clone shallow por
+          # defecto no existe el commit anterior.
+          fetch-depth: 0
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -117,10 +121,25 @@ jobs:
           node-version: 24
           cache: pnpm
 
+      # Este job despliega por CLI, y el "Ignored Build Step" de Vercel solo
+      # aplica a los deploys que dispara la integración de Git. Sin este check
+      # un commit que solo toca el backend reconstruiría la web igual.
+      - name: Check if web is affected
+        id: affected
+        run: |
+          if npx --yes turbo-ignore web --fallback=HEAD^1; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "web no está afectada por este commit — se omite el deploy"
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
       - name: Install Vercel CLI
+        if: steps.affected.outputs.changed == 'true'
         run: pnpm add -g vercel
 
       - name: Pull Vercel environment
+        if: steps.affected.outputs.changed == 'true'
         run: |
           if [ "${{ github.ref_name }}" = "main" ]; then
             vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
@@ -129,6 +148,7 @@ jobs:
           fi
 
       - name: Build project
+        if: steps.affected.outputs.changed == 'true'
         run: |
           if [ "${{ github.ref_name }}" = "main" ]; then
             vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
@@ -137,6 +157,7 @@ jobs:
           fi
 
       - name: Deploy
+        if: steps.affected.outputs.changed == 'true'
         run: |
           if [ "${{ github.ref_name }}" = "main" ]; then
             vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}

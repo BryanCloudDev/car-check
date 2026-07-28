@@ -1,4 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "git": {
+    "deploymentEnabled": false
+  },
   "ignoreCommand": "npx turbo-ignore --fallback=HEAD^1"
 }
