@@ -34,6 +34,9 @@ COPY --from=deployer /deploy/backend/package.json ./package.json
 COPY --from=builder  /app/apps/backend/dist       ./dist
 COPY --from=builder  /app/apps/backend/generated  ./generated
 COPY --from=builder  /app/apps/backend/prisma     ./prisma
+# schema.prisma declares no datasource url — "prisma migrate deploy" reads it
+# from here at startup, so the config has to ship with the image.
+COPY --from=builder  /app/apps/backend/prisma.config.ts ./prisma.config.ts
 
 EXPOSE 3001
 CMD ["node", "dist/main"]
