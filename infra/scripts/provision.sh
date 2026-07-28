@@ -14,6 +14,13 @@ if [[ ! "$ENV" =~ ^(dev|qa|prod)$ ]]; then
   exit 1
 fi
 
+# Railway's environments are named differently from the Terraform workspaces.
+case "$ENV" in
+  dev) RAILWAY_ENV="development" ;;
+  prod) RAILWAY_ENV="production" ;;
+  *) RAILWAY_ENV="$ENV" ;;
+esac
+
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 INFRA_DIR="$REPO_ROOT/infra/s3"
 
@@ -44,13 +51,15 @@ echo ""
 echo "==> Bucket created: $BUCKET"
 echo "==> Pushing variables to Railway environment: $ENV"
 
-railway variables set \
-  APP_ENV="$ENV" \
-  AWS_REGION="$REGION" \
-  S3_BUCKET="$BUCKET" \
-  AWS_ACCESS_KEY_ID="$KEY_ID" \
-  AWS_SECRET_ACCESS_KEY="$SECRET" \
-  --environment "$ENV"
+# Railway CLI v5 takes one key=value pair per `variable set` invocation.
+for pair in \
+  "APP_ENV=$ENV" \
+  "AWS_REGION=$REGION" \
+  "S3_BUCKET=$BUCKET" \
+  "AWS_ACCESS_KEY_ID=$KEY_ID" \
+  "AWS_SECRET_ACCESS_KEY=$SECRET"; do
+  railway variable set "$pair" --environment "$RAILWAY_ENV" --skip-deploys
+done
 
 echo ""
 echo "==> Done. Railway $ENV environment is ready."

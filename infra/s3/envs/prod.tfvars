@@ -3,5 +3,5 @@ project    = "car-check"
 env        = "prod"
 
 allowed_origins = [
-  "https://your-prod-domain.vercel.app", # replace with real prod URL
+  "https://car-check-web.vercel.app",
 ]

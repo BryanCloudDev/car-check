@@ -41,10 +41,94 @@ jobs:
           if [ "$ENV" = "prod" ]; then
             echo "railway_env_id=f14b3d44-6455-4e7b-8948-72342ee28771" >> $GITHUB_OUTPUT
             echo "frontend_url=${{ secrets.FRONTEND_URL_PROD }}" >> $GITHUB_OUTPUT
+            echo "pg_service=postgres-prod" >> $GITHUB_OUTPUT
           else
             echo "railway_env_id=e924fcc6-57e0-4946-8c04-9630aab7ea93" >> $GITHUB_OUTPUT
             echo "frontend_url=${{ secrets.FRONTEND_URL_DEV }}" >> $GITHUB_OUTPUT
+            echo "pg_service=Postgres" >> $GITHUB_OUTPUT
           fi
+
+      # The backend's Joi schema (src/common/config/joi.validation.ts) rejects
+      # startup unless all of these are present. The S3 ones are set further
+      # down from the Terraform outputs; everything else is set here.
+      - name: Ensure Railway app variables
+        env:
+          RAILWAY_API_TOKEN: ${{ secrets.RAILWAY_API_TOKEN }}
+          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+          RAILWAY_ENVIRONMENT_ID: ${{ steps.env.outputs.railway_env_id }}
+          RAILWAY_SERVICE_ID: ${{ steps.env.outputs.railway_service }}
+          PG_SERVICE_NAME: ${{ steps.env.outputs.pg_service }}
+          APP_ENV: ${{ steps.env.outputs.name }}
+        run: |
+          python3 << 'PYEOF'
+          import base64, json, os, secrets, sys, urllib.error, urllib.request
+
+          URL = "https://backboard.railway.com/graphql/v2"
+          HEADERS = {
+              "Authorization": "Bearer " + os.environ["RAILWAY_API_TOKEN"],
+              "Content-Type": "application/json",
+              "User-Agent": "railway-cli/3.15.0",
+          }
+
+          def gql(query, variables):
+              req = urllib.request.Request(
+                  URL,
+                  data=json.dumps({"query": query, "variables": variables}).encode(),
+                  headers=HEADERS,
+              )
+              try:
+                  with urllib.request.urlopen(req) as resp:
+                      body = json.loads(resp.read())
+              except urllib.error.HTTPError as e:
+                  sys.exit(f"HTTP {e.code}: {e.read().decode()}")
+              if "errors" in body:
+                  sys.exit("GraphQL errors: " + json.dumps(body["errors"]))
+              return body["data"]
+
+          ids = {
+              "projectId": os.environ["RAILWAY_PROJECT_ID"],
+              "environmentId": os.environ["RAILWAY_ENVIRONMENT_ID"],
+              "serviceId": os.environ["RAILWAY_SERVICE_ID"],
+          }
+
+          existing = gql(
+              """query v($projectId: String!, $environmentId: String!, $serviceId: String) {
+                   variables(projectId: $projectId, environmentId: $environmentId, serviceId: $serviceId)
+                 }""",
+              ids,
+          )["variables"]
+
+          # Rotating this would invalidate every issued JWT, so mint it only once.
+          jwt_secret = existing.get("JWT_SECRET") or base64.b64encode(secrets.token_bytes(48)).decode()
+          pg = os.environ["PG_SERVICE_NAME"]
+
+          # Railway reference variable, e.g. ${ {postgres-prod.DATABASE_URL} } without
+          # the spaces. Assembled from pieces so the literal "$" + "{{" sequence never
+          # appears in this file - Actions would try to evaluate it as an expression.
+          def ref(name):
+              return "$" + "{{" + pg + "." + name + "}}"
+
+          variables = {
+              "NODE_ENV": "production",
+              "APP_ENV": os.environ["APP_ENV"],
+              "PORT": "3001",
+              "JWT_SECRET": jwt_secret,
+              # Resolved by Railway from the Postgres service in this environment
+              "DATABASE_URL": ref("DATABASE_URL"),
+              "POSTGRES_USER": ref("POSTGRES_USER"),
+              "POSTGRES_PASSWORD": ref("POSTGRES_PASSWORD"),
+              "POSTGRES_DB": ref("POSTGRES_DB"),
+              "POSTGRES_PORT": ref("PGPORT"),
+          }
+
+          gql(
+              """mutation up($input: VariableCollectionUpsertInput!) {
+                   variableCollectionUpsert(input: $input)
+                 }""",
+              {"input": {**ids, "variables": variables, "skipDeploys": True}},
+          )
+          print("App variables set (JWT_SECRET %s)" % ("reused" if existing.get("JWT_SECRET") else "generated"))
+          PYEOF
 
       - name: Check if S3 already provisioned
         id: check
