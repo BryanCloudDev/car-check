@@ -254,7 +254,17 @@ jobs:
             for bucket in $(aws s3api list-buckets \
               --query "Buckets[?starts_with(Name, 'car-check-media-${ENV}-')].Name" \
               --output text 2>/dev/null); do
-              echo "Removing orphaned bucket: $bucket"
+              # "Huérfano" solo significa que no está en el state de Terraform;
+              # el bucket puede tener media real. Si tiene objetos, se para el
+              # workflow en vez de borrarlos con `rb --force`.
+              KEYS=$(aws s3api list-objects-v2 --bucket "$bucket" \
+                --max-keys 1 --query 'KeyCount' --output text 2>/dev/null || echo 0)
+              if [ "$KEYS" != "0" ]; then
+                echo "::error::$bucket no está en el state pero contiene objetos."
+                echo "Importalo con 'terraform import' o vacialo a mano antes de reintentar."
+                exit 1
+              fi
+              echo "Removing orphaned bucket (vacío): $bucket"
               aws s3 rb "s3://$bucket" --force
             done
 
