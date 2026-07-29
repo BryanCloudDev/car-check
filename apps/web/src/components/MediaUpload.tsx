@@ -1,5 +1,6 @@
 'use client';
 import { useRef, useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 const ACCEPTED = [
   'image/jpeg',
@@ -19,6 +20,7 @@ export function MediaUpload({
   orderId: string;
   onSuccess?: () => void;
 }) {
+  const t = useTranslations('media');
   const [msg, setMsg] = useState('');
   const [busy, setBusy] = useState(false);
   const [ok, setOk] = useState(false);
@@ -30,7 +32,7 @@ export function MediaUpload({
     setBusy(true);
     setOk(false);
     try {
-      setMsg('Solicitando URL prefirmada…');
+      setMsg(t('upload.requestingUrl'));
       const urlRes = await fetch(`/api/media/${orderId}/upload-url`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -47,7 +49,7 @@ export function MediaUpload({
         key: string;
       };
 
-      setMsg('Subiendo a S3…');
+      setMsg(t('upload.uploading'));
       const s3Res = await fetch(uploadUrl, {
         method: 'PUT',
         headers: { 'Content-Type': file.type },
@@ -55,7 +57,7 @@ export function MediaUpload({
       });
       if (!s3Res.ok) throw new Error(`S3 ${s3Res.status}: ${s3Res.statusText}`);
 
-      setMsg('Registrando archivo…');
+      setMsg(t('upload.registering'));
       const confirmRes = await fetch(`/api/media/${orderId}/confirm`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -74,10 +76,10 @@ export function MediaUpload({
       }
 
       setOk(true);
-      setMsg('Archivo subido correctamente.');
+      setMsg(t('upload.success'));
       onSuccess?.();
     } catch (err) {
-      setMsg(err instanceof Error ? err.message : 'Error desconocido');
+      setMsg(err instanceof Error ? err.message : t('unknownError'));
     } finally {
       setBusy(false);
       // reset so the same file can be re-selected after an error
@@ -140,7 +142,7 @@ export function MediaUpload({
             <line x1="12" y1="3" x2="12" y2="15" />
           </svg>
         )}
-        {busy ? msg : 'Subir foto o video'}
+        {busy ? msg : t('upload.button')}
       </label>
 
       {!busy && msg && (

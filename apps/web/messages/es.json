@@ -183,6 +183,28 @@
       "REPUESTO": "Repuesto"
     }
   },
+  "media": {
+    "loading": "Cargando archivos…",
+    "empty": "Aún no hay fotos ni videos en esta orden.",
+    "unknownError": "Error desconocido",
+    "photoAlt": "Foto {index} de {total} de la orden",
+    "openItem": "Abrir archivo {index} en pantalla completa",
+    "viewerLabel": "Galería de la orden",
+    "counter": "{index} de {total}",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "close": "Cerrar",
+    "openOriginal": "Abrir original en una pestaña nueva",
+    "thumbnails": "Miniaturas",
+    "goTo": "Ir al archivo {index}",
+    "upload": {
+      "button": "Subir foto o video",
+      "requestingUrl": "Solicitando URL prefirmada…",
+      "uploading": "Subiendo archivo…",
+      "registering": "Registrando archivo…",
+      "success": "Archivo subido correctamente."
+    }
+  },
   "ordenes": {
     "title": "Órdenes de trabajo",
     "new": "Nueva orden",

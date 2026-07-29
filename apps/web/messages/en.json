@@ -183,6 +183,28 @@
       "REPUESTO": "Part"
     }
   },
+  "media": {
+    "loading": "Loading files…",
+    "empty": "This order has no photos or videos yet.",
+    "unknownError": "Unknown error",
+    "photoAlt": "Photo {index} of {total} for this order",
+    "openItem": "Open file {index} full screen",
+    "viewerLabel": "Order gallery",
+    "counter": "{index} of {total}",
+    "previous": "Previous",
+    "next": "Next",
+    "close": "Close",
+    "openOriginal": "Open original in a new tab",
+    "thumbnails": "Thumbnails",
+    "goTo": "Go to file {index}",
+    "upload": {
+      "button": "Upload photo or video",
+      "requestingUrl": "Requesting presigned URL…",
+      "uploading": "Uploading file…",
+      "registering": "Registering file…",
+      "success": "File uploaded successfully."
+    }
+  },
   "ordenes": {
     "title": "Work orders",
     "new": "New order",
