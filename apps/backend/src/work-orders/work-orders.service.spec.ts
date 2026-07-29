@@ -3,6 +3,7 @@ import { Test } from '@nestjs/testing';
 import { I18nService } from 'nestjs-i18n';
 import { OrderStatus, Prisma } from '../../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { StorageService } from '../common/storage/storage.service';
 import { WorkshopScopeService } from '../common/workshop-scope/workshop-scope.service';
 import { VehiclesService } from '../vehicles/vehicles.service';
 import { WorkOrdersService } from './work-orders.service';
@@ -49,6 +50,10 @@ describe('WorkOrdersService.advanceStatus', () => {
         {
           provide: VehiclesService,
           useValue: { findOrCreate: jest.fn() },
+        },
+        {
+          provide: StorageService,
+          useValue: { getObject: jest.fn() },
         },
         {
           provide: I18nService,
@@ -135,6 +140,7 @@ describe('WorkOrdersService.findAll / findOne', () => {
         { provide: PrismaService, useValue: {} },
         { provide: WorkshopScopeService, useValue: { for: jest.fn() } },
         { provide: VehiclesService, useValue: { findOrCreate: jest.fn() } },
+        { provide: StorageService, useValue: { getObject: jest.fn() } },
         {
           provide: I18nService,
           useValue: { translate: jest.fn((key: string) => key) },
@@ -208,5 +214,113 @@ describe('WorkOrdersService.findAll / findOne', () => {
         NotFoundException,
       );
     });
+  });
+});
+
+/**
+ * PNG 1x1 real: sirve para comprobar que PDFKit acepta el buffer del logo.
+ * Un buffer inválido haría que `doc.image` lance y el recibo fallara.
+ */
+const REAL_PNG = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==',
+  'base64',
+);
+
+describe('WorkOrdersService.getReceipt', () => {
+  let service: WorkOrdersService;
+  let storage: { getObject: jest.Mock };
+
+  const order = {
+    id: ORDER_ID,
+    status: OrderStatus.LISTO,
+    createdAt: new Date('2026-03-01'),
+    serviceDate: new Date('2026-03-02'),
+    mileage: 120_000,
+    cost: 150,
+    notes: 'Cambio de aceite',
+    workshop: {
+      name: 'Taller El Salvador',
+      address: 'Calle Rubén Darío #123, San Salvador',
+      nit: '0614-010203-102-1',
+      phone: '+503 2222 3333',
+      logoKey: null as string | null,
+    },
+    customer: { name: 'Ana López', phone: '+503 7777 8888', email: null },
+    vehicle: {
+      vin: 'ABCDEFGH123456789',
+      make: 'Toyota',
+      model: 'Hilux',
+      year: 2020,
+      plate: 'P123456',
+    },
+    items: [
+      {
+        type: 'SERVICIO',
+        description: 'Cambio de aceite',
+        quantity: 1,
+        unitPrice: 150,
+      },
+    ],
+  };
+
+  function setup(workshopOverrides: Partial<typeof order.workshop> = {}) {
+    return Test.createTestingModule({
+      providers: [
+        WorkOrdersService,
+        {
+          provide: PrismaService,
+          useValue: {
+            workOrder: {
+              findFirstOrThrow: jest.fn().mockResolvedValue({
+                ...order,
+                workshop: { ...order.workshop, ...workshopOverrides },
+              }),
+            },
+          },
+        },
+        { provide: WorkshopScopeService, useValue: { for: jest.fn() } },
+        { provide: VehiclesService, useValue: { findOrCreate: jest.fn() } },
+        { provide: StorageService, useValue: storage },
+        {
+          provide: I18nService,
+          useValue: { translate: jest.fn((key: string) => key) },
+        },
+      ],
+    }).compile();
+  }
+
+  beforeEach(() => {
+    storage = { getObject: jest.fn() };
+  });
+
+  it('genera un PDF con los datos fiscales aunque el taller no tenga logo', async () => {
+    const module = await setup();
+    service = module.get(WorkOrdersService);
+
+    const pdf = await service.getReceipt(WORKSHOP_ID, ORDER_ID);
+
+    expect(pdf.subarray(0, 5).toString()).toBe('%PDF-');
+    expect(storage.getObject).not.toHaveBeenCalled();
+  });
+
+  it('embebe el logo cuando el taller tiene uno', async () => {
+    storage.getObject.mockResolvedValue(REAL_PNG);
+    const module = await setup({ logoKey: 'workshops/ws-1/logo/abc' });
+    service = module.get(WorkOrdersService);
+
+    const pdf = await service.getReceipt(WORKSHOP_ID, ORDER_ID);
+
+    expect(pdf.subarray(0, 5).toString()).toBe('%PDF-');
+    expect(storage.getObject).toHaveBeenCalledWith('workshops/ws-1/logo/abc');
+  });
+
+  it('emite el recibo sin logo si S3 falla, en vez de romper la descarga', async () => {
+    storage.getObject.mockRejectedValue(new Error('S3 caído'));
+    const module = await setup({ logoKey: 'workshops/ws-1/logo/abc' });
+    service = module.get(WorkOrdersService);
+
+    const pdf = await service.getReceipt(WORKSHOP_ID, ORDER_ID);
+
+    expect(pdf.subarray(0, 5).toString()).toBe('%PDF-');
   });
 });

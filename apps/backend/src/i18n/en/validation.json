@@ -54,5 +54,24 @@
     "serviceDateInvalid": "Service date must have a valid format",
     "itemsArray": "Items must be a list",
     "itemsMinSize": "Add at least one item to the order"
+  },
+  "workshop": {
+    "nameText": "Workshop name must be text",
+    "nameMinLength": "Workshop name must be at least {constraints.0} characters long",
+    "nameMaxLength": "Workshop name must be at most {constraints.0} characters long",
+    "emailInvalid": "Workshop email must be a valid email",
+    "phoneText": "Phone must be text",
+    "phoneMinLength": "Phone must be at least {constraints.0} characters long",
+    "phoneMaxLength": "Phone must be at most {constraints.0} characters long",
+    "addressText": "Address must be text",
+    "addressMaxLength": "Address must be at most {constraints.0} characters long",
+    "nitText": "NIT must be text",
+    "nitMaxLength": "NIT must be at most {constraints.0} characters long",
+    "logoTypeNotAllowed": "The logo must be a PNG or JPEG image",
+    "logoSizeInt": "Logo size must be an integer",
+    "logoSizeMin": "Logo size must be greater than 0",
+    "logoSizeMax": "The logo exceeds the maximum allowed size",
+    "keyText": "The logo key must be text",
+    "keyRequired": "The logo key is required"
   }
 }

@@ -18,6 +18,7 @@
     "historial": "Historial",
     "clientes": "Clientes",
     "ordenes": "Órdenes",
+    "configuracion": "Configuración",
     "openMenu": "Abrir menú",
     "closeMenu": "Cerrar menú",
     "logout": "Cerrar sesión"
@@ -317,6 +318,52 @@
       "updateFailed": "No se pudo actualizar la orden. Intentá de nuevo.",
       "invalidTransition": "Transición de estado no permitida.",
       "statusChangeFailed": "No se pudo cambiar el estado. Intentá de nuevo."
+    }
+  },
+  "configuracion": {
+    "title": "Datos del taller",
+    "description": "Estos datos aparecen en los comprobantes que entregás al cliente. Solo un administrador puede cambiarlos.",
+    "loadError": "No se pudieron cargar los datos del taller.",
+    "form": {
+      "name": "Nombre del taller",
+      "namePlaceholder": "Taller Mecánico San Salvador",
+      "email": "Correo de contacto",
+      "emailPlaceholder": "contacto@taller.sv",
+      "phone": "Teléfono",
+      "phonePlaceholder": "+503 2222 3333",
+      "address": "Dirección",
+      "addressPlaceholder": "Calle Rubén Darío #123, San Salvador",
+      "nit": "NIT",
+      "nitPlaceholder": "0614-010203-102-1",
+      "nitHint": "NIT de 14 dígitos si el taller es persona jurídica, o tu DUI si sos persona natural.",
+      "submit": "Guardar cambios",
+      "saving": "Guardando…",
+      "saved": "Datos del taller actualizados."
+    },
+    "logo": {
+      "label": "Logo",
+      "none": "Sin logo",
+      "alt": "Logo del taller",
+      "upload": "Subir logo",
+      "replace": "Cambiar logo",
+      "remove": "Quitar",
+      "removing": "Quitando…",
+      "hint": "PNG o JPEG, hasta 2 MB. Aparece en el encabezado de los comprobantes.",
+      "requestingUrl": "Preparando la subida…",
+      "uploading": "Subiendo logo…",
+      "registering": "Guardando logo…",
+      "tooLarge": "El logo no puede pesar más de 2 MB.",
+      "failed": "No se pudo subir el logo. Intentá de nuevo."
+    },
+    "errors": {
+      "nameMin": "El nombre del taller debe tener al menos 2 caracteres.",
+      "emailInvalid": "Ingresá un correo electrónico válido.",
+      "phoneMin": "El teléfono debe tener al menos 7 caracteres.",
+      "emailTaken": "Ese correo ya está en uso por otro taller.",
+      "forbidden": "Solo un administrador puede cambiar los datos del taller.",
+      "invalidData": "Datos inválidos. Revisá los campos e intentá de nuevo.",
+      "updateFailed": "No se pudieron guardar los cambios. Intentá de nuevo.",
+      "logoRemoveFailed": "No se pudo quitar el logo. Intentá de nuevo."
     }
   }
 }

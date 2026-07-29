@@ -18,6 +18,7 @@
     "historial": "History",
     "clientes": "Customers",
     "ordenes": "Orders",
+    "configuracion": "Settings",
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
     "logout": "Sign out"
@@ -317,6 +318,52 @@
       "updateFailed": "Could not update the order. Try again.",
       "invalidTransition": "Status transition not allowed.",
       "statusChangeFailed": "Could not change the status. Try again."
+    }
+  },
+  "configuracion": {
+    "title": "Workshop details",
+    "description": "These details appear on the receipts you hand to customers. Only an admin can change them.",
+    "loadError": "Could not load the workshop details.",
+    "form": {
+      "name": "Workshop name",
+      "namePlaceholder": "San Salvador Auto Shop",
+      "email": "Contact email",
+      "emailPlaceholder": "contact@workshop.sv",
+      "phone": "Phone",
+      "phonePlaceholder": "+503 2222 3333",
+      "address": "Address",
+      "addressPlaceholder": "Calle Rubén Darío #123, San Salvador",
+      "nit": "NIT",
+      "nitPlaceholder": "0614-010203-102-1",
+      "nitHint": "14-digit NIT for a registered company, or your DUI if you are a sole proprietor.",
+      "submit": "Save changes",
+      "saving": "Saving…",
+      "saved": "Workshop details updated."
+    },
+    "logo": {
+      "label": "Logo",
+      "none": "No logo",
+      "alt": "Workshop logo",
+      "upload": "Upload logo",
+      "replace": "Replace logo",
+      "remove": "Remove",
+      "removing": "Removing…",
+      "hint": "PNG or JPEG, up to 2 MB. Shown in the receipt header.",
+      "requestingUrl": "Preparing upload…",
+      "uploading": "Uploading logo…",
+      "registering": "Saving logo…",
+      "tooLarge": "The logo cannot be larger than 2 MB.",
+      "failed": "Could not upload the logo. Please try again."
+    },
+    "errors": {
+      "nameMin": "The workshop name must be at least 2 characters long.",
+      "emailInvalid": "Enter a valid email address.",
+      "phoneMin": "The phone number must be at least 7 characters long.",
+      "emailTaken": "That email is already used by another workshop.",
+      "forbidden": "Only an admin can change the workshop details.",
+      "invalidData": "Invalid data. Check the fields and try again.",
+      "updateFailed": "Could not save your changes. Please try again.",
+      "logoRemoveFailed": "Could not remove the logo. Please try again."
     }
   }
 }

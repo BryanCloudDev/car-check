@@ -12,6 +12,7 @@ import { CustomersModule } from './customers/customers.module';
 import { WorkOrdersModule } from './work-orders/work-orders.module';
 import { MediaModule } from './media/media.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { WorkshopsModule } from './workshops/workshops.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
     WorkOrdersModule,
     MediaModule,
     DashboardModule,
+    WorkshopsModule,
   ],
   controllers: [],
   providers: [],

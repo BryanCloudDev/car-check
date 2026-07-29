@@ -32,7 +32,9 @@ export default tseslint.config(
     },
   },
   {
-    files: ['test/**/*.ts', '**/*.spec.ts'],
+    // Los globs llevan `**/` porque lint-staged invoca ESLint desde la raíz del
+    // monorepo: sin el prefijo, `test/**` no matchea `apps/backend/test/**`.
+    files: ['**/test/**/*.ts', '**/*.spec.ts'],
     rules: {
       '@typescript-eslint/no-unsafe-assignment': 'off',
       '@typescript-eslint/no-unsafe-member-access': 'off',

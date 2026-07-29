@@ -6,3 +6,6 @@ export const VALID_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
   LISTO: [OrderStatus.ENTREGADO],
   ENTREGADO: [],
 };
+
+/** Caja (en puntos PDF) donde se encaja el logo del taller en el recibo. */
+export const RECEIPT_LOGO_FIT = { width: 120, height: 60 } as const;

@@ -3,48 +3,23 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import {
-  S3Client,
-  PutObjectCommand,
-  GetObjectCommand,
-} from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { randomUUID } from 'crypto';
 import { MediaType, Prisma } from '../../generated/prisma/client';
 import { PrismaErrorCode } from '../common/constants';
 import { PrismaService } from '../prisma/prisma.service';
+import { StorageService } from '../common/storage/storage.service';
 import { WorkshopScopeService } from '../common/workshop-scope/workshop-scope.service';
 import { ConfirmUploadDto } from './dto/confirm-upload.dto';
 import { CreateUploadUrlDto } from './dto/create-upload-url.dto';
-import {
-  ALLOWED_IMAGE_TYPES,
-  MAX_BYTES,
-  PRESIGNED_GET_URL_EXPIRES_IN,
-  PRESIGNED_URL_EXPIRES_IN,
-} from './media.constants';
+import { ALLOWED_IMAGE_TYPES, MAX_BYTES } from './media.constants';
 
 @Injectable()
 export class MediaService {
-  private readonly s3: S3Client;
-  private readonly bucket: string;
-
   constructor(
-    private readonly config: ConfigService,
     private readonly prisma: PrismaService,
+    private readonly storage: StorageService,
     private readonly scope: WorkshopScopeService,
-  ) {
-    this.s3 = new S3Client({
-      region: this.config.get<string>('aws.region')!,
-      credentials: {
-        accessKeyId: this.config.get<string>('aws.accessKeyId')!,
-        secretAccessKey: this.config.get<string>('aws.secretAccessKey')!,
-      },
-      requestChecksumCalculation: 'WHEN_REQUIRED',
-      responseChecksumValidation: 'WHEN_REQUIRED',
-    });
-    this.bucket = this.config.get<string>('aws.s3Bucket')!;
-  }
+  ) {}
 
   async createUploadUrl(
     workshopId: string,
@@ -55,14 +30,7 @@ export class MediaService {
     this.validateSize(dto.contentType, dto.sizeBytes);
 
     const key = `orders/${orderId}/${randomUUID()}`;
-    const cmd = new PutObjectCommand({
-      Bucket: this.bucket,
-      Key: key,
-      ContentType: dto.contentType,
-    });
-    const uploadUrl = await getSignedUrl(this.s3, cmd, {
-      expiresIn: PRESIGNED_URL_EXPIRES_IN,
-    });
+    const uploadUrl = await this.storage.createUploadUrl(key, dto.contentType);
 
     return { uploadUrl, key };
   }
@@ -98,16 +66,10 @@ export class MediaService {
     });
 
     return Promise.all(
-      assets.map(async (asset) => {
-        const cmd = new GetObjectCommand({
-          Bucket: this.bucket,
-          Key: asset.key,
-        });
-        const url = await getSignedUrl(this.s3, cmd, {
-          expiresIn: PRESIGNED_GET_URL_EXPIRES_IN,
-        });
-        return { ...asset, url };
-      }),
+      assets.map(async (asset) => ({
+        ...asset,
+        url: await this.storage.createDownloadUrl(asset.key),
+      })),
     );
   }
 

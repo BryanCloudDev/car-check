@@ -20,7 +20,9 @@
     "make": "Marca",
     "model": "Modelo",
     "year": "Año",
-    "plate": "Placa"
+    "plate": "Placa",
+    "nit": "NIT",
+    "address": "Dirección"
   },
   "table": {
     "type": "Tipo",

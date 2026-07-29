@@ -6,7 +6,6 @@ export type {
   OrderStatus,
   OrderItemType,
   MediaType,
-  Workshop,
   Customer,
   Vehicle,
   WorkOrder,
@@ -17,3 +16,11 @@ export type {
 // User without server-only fields that must never leave the backend.
 import type { User as _User } from './generated';
 export type User = Omit<_User, 'passwordHash'>;
+
+// Workshop without storage-internal fields. `logoKey` is an S3 object key that
+// only the backend can resolve; clients get a signed URL instead.
+import type { Workshop as _Workshop } from './generated';
+export type Workshop = Omit<_Workshop, 'logoKey'>;
+
+/** What `GET /workshops/me` returns: the workshop plus a signed logo URL. */
+export type WorkshopProfile = Workshop & { logoUrl: string | null };

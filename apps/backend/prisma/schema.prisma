@@ -22,10 +22,18 @@ datasource db {
 // ---------------------------------------------------------------------------
 
 model Workshop {
-  id        String   @id @default(cuid())
-  name      String
-  email     String   @unique
-  phone     String?
+  id      String  @id @default(cuid())
+  name    String
+  email   String  @unique
+  phone   String?
+  address String?
+  /// NIT del taller. En El Salvador es de 14 dígitos para persona jurídica,
+  /// pero una persona natural usa su DUI (9 dígitos) como NIT — por eso el
+  /// formato no se valida a nivel de schema.
+  nit     String?
+  /// Key del objeto en S3, no una URL: las URLs se firman al momento de leer.
+  logoKey String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

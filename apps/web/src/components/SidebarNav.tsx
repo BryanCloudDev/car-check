@@ -11,6 +11,7 @@ const navLinks = [
   { href: '/historial', key: 'historial', adminOnly: false },
   { href: '/clientes', key: 'clientes', adminOnly: false },
   { href: '/ordenes', key: 'ordenes', adminOnly: false },
+  { href: '/configuracion', key: 'configuracion', adminOnly: true },
 ] as const;
 
 export function SidebarNav({

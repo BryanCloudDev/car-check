@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { I18nContext, I18nService } from 'nestjs-i18n';
@@ -8,12 +9,13 @@ import PDFDocument from 'pdfkit';
 import { OrderStatus, Prisma } from '../../generated/prisma/client';
 import { PrismaErrorCode } from '../common/constants';
 import { PrismaService } from '../prisma/prisma.service';
+import { StorageService } from '../common/storage/storage.service';
 import { WorkshopScopeService } from '../common/workshop-scope/workshop-scope.service';
 import { VehiclesService } from '../vehicles/vehicles.service';
 import { AdvanceStatusDto } from './dto/advance-status.dto';
 import { CreateWorkOrderDto } from './dto/create-work-order.dto';
 import { UpdateWorkOrderDto } from './dto/update-work-order.dto';
-import { VALID_TRANSITIONS } from './work-orders.constants';
+import { RECEIPT_LOGO_FIT, VALID_TRANSITIONS } from './work-orders.constants';
 
 const ORDER_INCLUDE = {
   items: true,
@@ -23,10 +25,13 @@ const ORDER_INCLUDE = {
 
 @Injectable()
 export class WorkOrdersService {
+  private readonly logger = new Logger(WorkOrdersService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly scope: WorkshopScopeService,
     private readonly vehicles: VehiclesService,
+    private readonly storage: StorageService,
     private readonly i18n: I18nService,
   ) {}
 
@@ -170,6 +175,8 @@ export class WorkOrdersService {
       this.i18n.translate(`receipt.${key}`, { lang });
     const dateLocale = lang.startsWith('en') ? 'en-US' : 'es-MX';
 
+    const logo = await this.loadLogo(order.workshop.logoKey);
+
     return new Promise<Buffer>((resolve, reject) => {
       const doc = new PDFDocument({ margin: 50 });
       const chunks: Buffer[] = [];
@@ -178,10 +185,42 @@ export class WorkOrdersService {
       doc.on('error', reject);
 
       // Header
+      if (logo) {
+        // `align: 'center'` sólo centra dentro de la caja del `fit`, no en la
+        // página: la x se calcula a mano para que quede sobre el nombre.
+        const logoX = (doc.page.width - RECEIPT_LOGO_FIT.width) / 2;
+        const logoTop = doc.y;
+        doc.image(logo, logoX, logoTop, {
+          fit: [RECEIPT_LOGO_FIT.width, RECEIPT_LOGO_FIT.height],
+          align: 'center',
+        });
+        // Con x/y explícitos PDFKit no mueve el cursor de texto, así que hay
+        // que reservar la caja a mano o el nombre se dibuja sobre el logo.
+        doc.y = logoTop + RECEIPT_LOGO_FIT.height;
+        doc.moveDown(0.5);
+      }
       doc
         .fontSize(18)
         .font('Helvetica-Bold')
         .text(order.workshop.name, { align: 'center' });
+
+      // Datos fiscales del taller: lo que hace que el comprobante sea oficial.
+      const workshopDetails = [
+        order.workshop.address,
+        order.workshop.nit && `${t('fields.nit')}: ${order.workshop.nit}`,
+        order.workshop.phone && `${t('fields.phone')}: ${order.workshop.phone}`,
+      ].filter((line): line is string => Boolean(line));
+
+      if (workshopDetails.length > 0) {
+        doc
+          .fontSize(9)
+          .font('Helvetica')
+          .fillColor('#555555')
+          .text(workshopDetails.join('  ·  '), { align: 'center' })
+          .fillColor('black');
+      }
+
+      doc.moveDown(0.5);
       doc.fontSize(14).font('Helvetica').text(t('title'), { align: 'center' });
       doc.moveDown();
 
@@ -281,6 +320,22 @@ export class WorkOrdersService {
 
       doc.end();
     });
+  }
+
+  /**
+   * El logo es decoración del comprobante: si S3 falla o el objeto ya no está,
+   * el recibo se emite sin logo en vez de reventar la descarga.
+   */
+  private async loadLogo(logoKey: string | null): Promise<Buffer | null> {
+    if (!logoKey) return null;
+    try {
+      return await this.storage.getObject(logoKey);
+    } catch (e) {
+      this.logger.warn(
+        `No se pudo leer el logo del taller (${logoKey}): ${(e as Error).message}`,
+      );
+      return null;
+    }
   }
 
   async update(workshopId: string, id: string, dto: UpdateWorkOrderDto) {

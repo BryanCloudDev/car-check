@@ -54,5 +54,24 @@
     "serviceDateInvalid": "La fecha de servicio debe tener un formato válido",
     "itemsArray": "Los ítems deben ser una lista",
     "itemsMinSize": "Agregá al menos un ítem a la orden"
+  },
+  "workshop": {
+    "nameText": "El nombre del taller debe ser texto",
+    "nameMinLength": "El nombre del taller debe tener al menos {constraints.0} caracteres",
+    "nameMaxLength": "El nombre del taller no puede tener más de {constraints.0} caracteres",
+    "emailInvalid": "El correo del taller debe ser un email válido",
+    "phoneText": "El teléfono debe ser texto",
+    "phoneMinLength": "El teléfono debe tener al menos {constraints.0} caracteres",
+    "phoneMaxLength": "El teléfono no puede tener más de {constraints.0} caracteres",
+    "addressText": "La dirección debe ser texto",
+    "addressMaxLength": "La dirección no puede tener más de {constraints.0} caracteres",
+    "nitText": "El NIT debe ser texto",
+    "nitMaxLength": "El NIT no puede tener más de {constraints.0} caracteres",
+    "logoTypeNotAllowed": "El logo debe ser una imagen PNG o JPEG",
+    "logoSizeInt": "El tamaño del logo debe ser un número entero",
+    "logoSizeMin": "El tamaño del logo debe ser mayor a 0",
+    "logoSizeMax": "El logo supera el tamaño máximo permitido",
+    "keyText": "La clave del logo debe ser texto",
+    "keyRequired": "La clave del logo es obligatoria"
   }
 }

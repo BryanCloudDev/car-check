@@ -21,9 +21,3 @@ export const MAX_BYTES = {
   IMAGE: 20 * 1024 * 1024, // 20 MB
   VIDEO: 200 * 1024 * 1024, // 200 MB
 };
-
-/** Seconds until the presigned PUT URL expires */
-export const PRESIGNED_URL_EXPIRES_IN = 300; // 5 min
-
-/** Seconds until the presigned GET URL expires */
-export const PRESIGNED_GET_URL_EXPIRES_IN = 300; // 5 min
