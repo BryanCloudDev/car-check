@@ -157,10 +157,43 @@ jobs:
           fi
 
       - name: Deploy
+        id: deploy
         if: steps.affected.outputs.changed == 'true'
         run: |
           if [ "${{ github.ref_name }}" = "main" ]; then
             vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
           else
-            vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
+            url=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }} | tail -n1)
+            case "$url" in
+              https://*) ;;
+              *) echo "no se obtuvo una URL de despliegue válida: '$url'"; exit 1 ;;
+            esac
+            echo "url=$url" >> "$GITHUB_OUTPUT"
+            echo "Despliegue: $url"
           fi
+
+      # Los deploys por CLI no reciben la branch URL de Git, porque la
+      # integración está desactivada (git.deploymentEnabled en
+      # apps/web/vercel.json). Sin este paso la URL de dev se queda congelada
+      # apuntando al último deploy que hizo la integración.
+      # Producción no lo necesita: los dominios del proyecto se aplican solos.
+      - name: Apuntar el alias de dev a este despliegue
+        if: steps.affected.outputs.changed == 'true' && github.ref_name != 'main'
+        env:
+          DEPLOYMENT_URL: ${{ steps.deploy.outputs.url }}
+        run: |
+          # El primero es la branch URL que ya existe; si la plataforma no
+          # permite reapuntarla, cae al alias propio del proyecto.
+          for host in \
+            car-check-web-git-dev-bryanclouddevs-projects.vercel.app \
+            car-check-dev.vercel.app
+          do
+            if vercel alias set "$DEPLOYMENT_URL" "$host" \
+                 --token=${{ secrets.VERCEL_TOKEN }}; then
+              echo "alias activo: https://$host -> $DEPLOYMENT_URL"
+              exit 0
+            fi
+            echo "no se pudo apuntar $host, probando el siguiente…"
+          done
+          echo "ningún alias pudo apuntarse a $DEPLOYMENT_URL"
+          exit 1
