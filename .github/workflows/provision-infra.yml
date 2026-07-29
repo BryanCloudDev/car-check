@@ -11,6 +11,11 @@ on:
         default: dev
         type: choice
         options: [dev, prod]
+      force_apply:
+        description: Aplicar Terraform aunque S3 ya esté provisionado (p.ej. para corregir el CORS)
+        required: false
+        default: false
+        type: boolean
 
 concurrency:
   group: provision-infra-${{ github.ref_name }}
@@ -26,6 +31,9 @@ jobs:
 
       - name: Resolve environment
         id: env
+        env:
+          FRONTEND_URL_PROD: ${{ secrets.FRONTEND_URL_PROD }}
+          FRONTEND_URL_DEV: ${{ secrets.FRONTEND_URL_DEV }}
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             ENV="${{ github.event.inputs.environment }}"
@@ -40,13 +48,27 @@ jobs:
 
           if [ "$ENV" = "prod" ]; then
             echo "railway_env_id=f14b3d44-6455-4e7b-8948-72342ee28771" >> $GITHUB_OUTPUT
-            echo "frontend_url=${{ secrets.FRONTEND_URL_PROD }}" >> $GITHUB_OUTPUT
             echo "pg_service=postgres-prod" >> $GITHUB_OUTPUT
+            FRONTEND_URL="$FRONTEND_URL_PROD"
           else
             echo "railway_env_id=e924fcc6-57e0-4946-8c04-9630aab7ea93" >> $GITHUB_OUTPUT
-            echo "frontend_url=${{ secrets.FRONTEND_URL_DEV }}" >> $GITHUB_OUTPUT
             echo "pg_service=Postgres" >> $GITHUB_OUTPUT
+            FRONTEND_URL="$FRONTEND_URL_DEV"
           fi
+
+          # El header Origin del navegador nunca lleva "/" final: si el secreto
+          # lo trae, la regla de CORS no matchea nunca y el PUT presignado falla
+          # con "Failed to fetch".
+          FRONTEND_URL="${FRONTEND_URL%/}"
+
+          if [ "$ENV" = "prod" ]; then
+            ORIGINS="[\"$FRONTEND_URL\"]"
+          else
+            # dev comparte bucket con el desarrollo local, que corre en :3000
+            ORIGINS="[\"$FRONTEND_URL\",\"http://localhost:3000\"]"
+          fi
+          echo "allowed_origins=$ORIGINS" >> $GITHUB_OUTPUT
+          echo "CORS origins para $ENV: $ORIGINS"
 
       # The backend's Joi schema (src/common/config/joi.validation.ts) rejects
       # startup unless all of these are present. The S3 ones are set further
@@ -177,7 +199,10 @@ jobs:
               print("false")
           PYEOF
           )
-          if [ "$RESULT" = "true" ]; then
+          if [ "${{ github.event.inputs.force_apply }}" = "true" ]; then
+            echo "skip=false" >> $GITHUB_OUTPUT
+            echo "force_apply activo — se aplica Terraform aunque S3 ya exista"
+          elif [ "$RESULT" = "true" ]; then
             echo "skip=true" >> $GITHUB_OUTPUT
             echo "S3 already provisioned for ${{ steps.env.outputs.name }} — skipping"
           else
@@ -273,10 +298,12 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_TF_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_TF_SECRET_ACCESS_KEY }}
+          TF_ENV: ${{ steps.env.outputs.name }}
+          TF_ALLOWED_ORIGINS: ${{ steps.env.outputs.allowed_origins }}
         run: |
           terraform apply -auto-approve \
-            -var="env=${{ steps.env.outputs.name }}" \
-            -var='allowed_origins=["${{ steps.env.outputs.frontend_url }}"]'
+            -var="env=$TF_ENV" \
+            -var="allowed_origins=$TF_ALLOWED_ORIGINS"
 
       - name: Inject vars into Railway
         if: steps.check.outputs.skip == 'false'
